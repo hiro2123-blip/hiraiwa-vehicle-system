@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIRAIWA 車両・店舗業務管理システム (Ver.2 スプレッドシート連動版)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 15px; min-height: 100vh; transition: background-color 0.3s; }
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ヘッダーエリア */
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .system-title { font-size: 16pt; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
+        .store-badge { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 10px; border-radius: 6px; font-size: 9pt; font-weight: bold; }
+        .user-info { font-size: 9.5pt; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+        
+        .btn-toggle-role { background: #334155; color: #cbd5e1; border: none; padding: 4px 8px; font-size: 8pt; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-toggle-role.admin-active { background: #ef4444; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+
+        body.admin-mode header { border-color: #ef4444; }
+        body.admin-mode .system-title { color: #ef4444; }
+        body.admin-mode .store-badge { color: #ef4444; border-color: #ef4444; }
+
+        /* メインレイアウト */
+        .main-layout { display: grid; grid-template-columns: 290px 1fr; gap: 25px; }
+        .section-title { font-size: 10pt; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; font-weight: 600; border-left: 4px solid #38bdf8; padding-left: 8px; }
+        body.admin-mode .section-title { border-left-color: #ef4444; }
+
+        /* メニューボタン */
+        .sidebar { display: flex; flex-direction: column; gap: 12px; }
+        .action-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .action-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
+        body.admin-mode .action-card:hover { border-color: #ef4444; }
+        .action-header { font-size: 11pt; font-weight: bold; margin-bottom: 4px; }
+        
+        .btn-cust .action-header { color: #38bdf8; }
+        .btn-search .action-header { color: #fbbf24; }
+        .btn-shaken .action-header { color: #f87171; }
+        .btn-info .action-header { color: #60a5fa; }
+        .action-desc { font-size: 8pt; color: #94a3b8; line-height: 1.4; }
+
+        /* コンパクトカレンダー */
+        .calendar-container { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; }
+        .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .calendar-table th { padding: 6px 0; font-size: 8.5pt; color: #94a3b8; text-align: center; border-bottom: 2px solid #334155; }
+        .calendar-table td { height: 75px; border: 1px solid #334155; padding: 4px; vertical-align: top; }
+        .day-num { font-size: 8.5pt; font-weight: bold; color: #cbd5e1; margin-bottom: 3px; }
+        .sun .day-num { color: #f87171; }
+        .sat .day-num { color: #60a5fa; }
+        .other-month { opacity: 0.25; }
+
+        /* カレンダー内の色分けバッジ */
+        .badge-list { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 50px; }
+        .sched-badge { font-size: 7pt; padding: 1px 3px; border-radius: 3px; font-weight: bold; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; }
+        .badge-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); } /* 実績:緑 */
+        .badge-shaken { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } /* 車検予約:赤 */
+        .badge-plan { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); } /* 一般予約:青 */
+
+        /* フォーム共通 */
+        .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: span 2; }
+        label { font-size: 9pt; color: #94a3b8; font-weight: 600; }
+        input[type="text"], input[type="tel"], input[type="date"], input[type="number"], select, textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: #f8fafc; font-size: 10pt; }
+        textarea { height: 80px; resize: none; }
+        
+        .km-input-wrapper { position: relative; display: flex; align-items: center; }
+        .km-input-wrapper input { padding-right: 40px; }
+        .km-unit { position: absolute; right: 12px; color: #64748b; font-size: 9.5pt; font-weight: bold; }
+
+        /* IC車検証読み取り */
+        .ic-reader-box { background: #0f172a; border: 1px solid #38bdf8; border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .ic-status-text { font-size: 9.5pt; color: #94a3b8; line-height: 1.4; }
+        .btn-ic-read { background: #38bdf8; color: #0f172a; border: none; padding: 10px 18px; font-weight: bold; font-size: 9.5pt; border-radius: 6px; cursor: pointer; }
+
+        .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
+        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
+        .result-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 15px; }
+        .result-table th, .result-table td { padding: 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; }
+        
+        .btn-instant-work { background: #fbbf24; color: #0f172a; border: none; padding: 4px 10px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ヘッダー -->
+        <header>
+            <div class="header-left">
+                <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
+                <span class="store-badge" id="store-badge">朝霞店</span>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span>ログイン: <strong style="color:#fff;">相原 広史 様</strong></span>
+                    <button class="btn-toggle-role" id="role-toggle" onclick="toggleAdminMode()">一般スタッフ(朝霞店) 🔄</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== ① トップ画面 ==================== -->
+        <div id="page-top" class="page active">
+            <div class="main-layout">
+                <div class="sidebar">
+                    <div class="section-title">メニュー</div>
+                    <div class="action-card btn-cust" onclick="showPage('page-cust')">
+                        <div class="action-header">🆕 顧客登録</div>
+                        <div class="action-desc">新規顧客と車両をセット登録。IC車検証タッチ読取対応。</div>
+                    </div>
+                    <div class="action-card btn-search" onclick="showPage('page-search')">
+                        <div class="action-header">🔍 車両検索 / 作業記録</div>
+                        <div class="action-desc">突発来店お車のナンバー検索から、その場での実績入力・履歴確認。</div>
+                    </div>
+                    <div class="action-card btn-shaken" onclick="showPage('page-shaken-reg')">
+                        <div class="action-header">📋 車検予約</div>
+                        <div class="action-desc">車検リクエストシステムVer.1と連動。未来の車検枠を確保。</div>
+                    </div>
+                    <div class="action-card btn-info" onclick="showPage('page-plan-reg')">
+                        <div class="action-header">📅 一般予約</div>
+                        <div class="action-desc">オイル交換や点検など、未来の一般予約スケジュールを登録。</div>
+                    </div>
+                </div>
+
+                <!-- カレンダー -->
+                <div class="calendar-section">
+                    <div class="section-title">スケジュール・作業実績 (2026年6月)</div>
+                    <div class="calendar-container">
+                        <table class="calendar-table">
+                            <thead><tr><th style="color:#f87171">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color:#60a5fa">土</th></tr></thead>
+                            <tbody id="calendar-body">
+                                <!-- JavaScriptで日付とスプレッドシートの予約バッジを自動展開します -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="summary-bar">
+                <div>📊 スプレッドシート連携ステータス</div>
+                <div id="sync-status" style="color:#34d399; font-weight:bold;">🟢 オンライン（接続完了）</div>
+            </div>
+        </div>
+
+        <!-- ==================== ② 顧客登録画面 ==================== -->
+        <div id="page-cust" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <form id="form-customer" onsubmit="submitCustomer(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#38bdf8">👤 1. 顧客情報の入力</div>
+                    <div class="form-grid" style="margin-top:15px;">
+                        <div class="form-group"><label>お名前</label><input type="text" id="cust-name" required placeholder="平岩 太郎"></div>
+                        <div class="form-group"><label>フリガナ</label><input type="text" id="cust-ruby" required placeholder="ヒライワ タロウ"></div>
+                        <div class="form-group"><label>電話番号</label><input type="tel" id="cust-tel" required placeholder="090-XXXX-XXXX"></div>
+                        <div class="form-group full-width"><label>ご住所</label><input type="text" id="cust-address" required placeholder="埼玉県朝霞市..."></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title" style="color:#38bdf8">🚗 2. 車両情報の登録</div>
+                    <div class="ic-reader-box">
+                        <div class="ic-status-text"><strong>💳 電子車検証 IC読み取り機能</strong><br>リーダーに車検証を乗せてスキャンできます。</div>
+                        <button type="button" class="btn-ic-read" onclick="simulateICRead()">💳 IC車検証を読み取る</button>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="car-number" required placeholder="大宮 300 ぬ XXXX"></div>
+                        <div class="form-group"><label>車種</label><input type="text" id="car-model" required placeholder="エルグランド"></div>
+                        <div class="form-group"><label>車台番号</label><input type="text" id="car-vin" required placeholder="E52-XXXXXX"></div>
+                        <div class="form-group"><label>初度登録年月</label><input type="text" id="car-date" required placeholder="2020年1月"></div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#38bdf8;">📁 スプレッドシートへ新規登録する</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ==================== ③ 車両検索 画面 ==================== -->
+        <div id="page-search" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <div class="form-section">
+                <div class="section-title" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
+                <div class="form-grid" style="margin-top:15px;">
+                    <div class="form-group"><label>ナンバーを入力</label><input type="text" value="大宮 300"></div>
+                </div>
+            </div>
+            <table class="result-table">
+                <thead><tr><th>管理店舗</th><th>車両ナンバー</th><th>車種</th><th>顧客名</th><th>突発の実績登録</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td style="color:#34d399; font-weight:bold;">朝霞店</td>
+                        <td>大宮 300 ぬ 7788</td>
+                        <td>エルグランド</td>
+                        <td>平岩 太郎</td>
+                        <td><button class="btn-instant-work" onclick="openInstantWork('平岩 太郎', '大宮 300 ぬ 7788')">⚡ 今やった作業を登録</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==================== ④ 突発の実績登録画面 ==================== -->
+        <div id="page-instant-work" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-search')">← 検索結果に戻る</button>
+            <form id="form-work" onsubmit="submitWork(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#34d399">🛠️ 実施した作業内容の登録（実績入力）</div>
+                    <div style="background:#0f172a; padding:12px; border-radius:6px; margin: 15px 0; font-size:9.5pt;">
+                        <strong>対象顧客:</strong> <span id="work-target-display" style="color:#34d399; font-weight:bold;">-</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>作業実施日</label><input type="date" id="work-date" value="2026-06-26" required></div>
+                        <div class="form-group">
+                            <label>作業の分類</label>
+                            <select id="work-category"><option>🛢️ オイル交換・消耗品</option><option>🛠️ 一般整備 / 点検</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>入庫時走行距離</label>
+                            <div class="km-input-wrapper"><input type="number" id="work-mileage" placeholder="例: 45000" required><span class="km-unit">km</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label>対応場所</label>
+                            <select id="work-location"><option>朝霞店（自店）</option><option>工場</option></select>
+                        </div>
+                        <div class="form-group full-width"><label>作業内容メモ</label><textarea id="work-detail" required placeholder="実施した作業の具体的な内容を入力..."></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:20px; background:#34d399; color:#0f172a;">✅ スプレッドシートに実績を保存</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ==================== ⑤ 車検予約 登録画面 ==================== -->
+        <div id="page-shaken-reg" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <form id="form-shaken" onsubmit="submitShaken(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#ef4444">📋 車検予約スケジュールの登録（Ver.1システム連動）</div>
+                    <div class="form-grid" style="margin-top:15px;">
+                        <div class="form-group full-width">
+                            <label>顧客・車両</label>
+                            <select id="shaken-cust"><option value="平岩 太郎">平岩 太郎 様 / エルグランド</option></select>
+                        </div>
+                        <div class="form-group"><label>車検入庫予定日</label><input type="date" id="shaken-date" value="2026-06-26" required></div>
+                        <div class="form-group">
+                            <label>入庫先区分</label>
+                            <select id="shaken-location"><option>朝霞店（自店）</option><option>工場（回送）</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>代車有無</label>
+                            <select id="shaken-daisha"><option>代車不要</option><option>代車必要</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>引取希望</label>
+                            <select id="shaken-hikitori"><option>お客様来店</option><option>店舗引取</option></select>
+                        </div>
+                        <div class="form-group full-width"><label>要望メモ</label><textarea id="shaken-memo" placeholder="車検時の特別リクエストなど..."></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:20px; background:#ef4444; color:#fff;">📋 車検予約を登録してカレンダーと連動</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ==================== ⑥ 一般予約 登録画面 ==================== -->
+        <div id="page-plan-reg" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <form id="form-plan" onsubmit="submitPlan(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#60a5fa">📅 一般予約スケジュールの登録</div>
+                    <div class="form-grid" style="margin-top:15px;">
+                        <div class="form-group full-width">
+                            <label>顧客・車両</label>
+                            <select id="plan-cust"><option value="平岩 太郎">平岩 太郎 様 / エルグランド</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>作業予約区分</label>
+                            <select id="plan-category"><option>🛢️ オイル交換</option><option>🛠️ 一般整備</option><option>🔍 定期点検</option></select>
+                        </div>
+                        <div class="form-group"><label>入庫予定日</label><input type="date" id="plan-date" value="2026-06-27" required></div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:20px; background:#60a5fa; color:#0f172a;">📅 予約を登録する</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ==================== 🛠️ データベース（GAS）双方向通信プログラム ==================== -->
+    <script>
+        // 🚨 【最重要】ここにデプロイして発行された「ウェブアプリのURL」をコピペしてください！
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
+
+        let currentStore = "朝霞店";
+        let targetCustName = "";
+        let targetCarNumber = "";
+
+        window.onload = function() {
+            generateCalendarGrid();
+            loadCalendarDataFromServer();
+        };
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function toggleAdminMode() {
+            const body = document.body;
+            const btn = document.getElementById('role-toggle');
+            const badge = document.getElementById('store-badge');
+            if (body.classList.contains('admin-mode')) {
+                body.classList.remove('admin-mode');
+                btn.innerText = "一般スタッフ(朝霞店) 🔄";
+                badge.innerText = "朝霞店";
+                currentStore = "朝霞店";
+            } else {
+                body.classList.add('admin-mode');
+                btn.innerText = "最高管理者 👑";
+                btn.classList.add('admin-active');
+                badge.innerText = "全店統合統括";
+                currentStore = "全店";
+            }
+        }
+
+        function simulateICRead() {
+            alert('ICリーダー接続を確認中...車検証をスキャンします 🔓');
+            document.getElementById('car-number').value = "大宮 300 ぬ 7788";
+            document.getElementById('car-model').value = "エルグランド";
+            document.getElementById('car-vin').value = "E52-104592";
+            document.getElementById('car-date').value = "2021年3月";
+        }
+
+        function openInstantWork(name, carNum) {
+            targetCustName = name;
+            targetCarNumber = carNum;
+            document.getElementById('work-target-display').innerText = name + " 様 / " + carNum;
+            showPage('page-instant-work');
+        }
+
+        // 📅 2026年6月の固定カレンダーを自動生成する関数
+        function generateCalendarGrid() {
+            const tbody = document.getElementById('calendar-body');
+            tbody.innerHTML = "";
+            let days = [
+                {d:31, m:'prev'}, {d:1, m:'cur'}, {d:2, m:'cur'}, {d:3, m:'cur'}, {d:4, m:'cur'}, {d:5, m:'cur'}, {d:6, m:'cur', sat:true},
+                {d:7, m:'cur', sun:true}, {d:8, m:'cur'}, {d:9, m:'cur'}, {d:10, m:'cur'}, {d:11, m:'cur'}, {d:12, m:'cur'}, {d:13, m:'cur', sat:true},
+                {d:14, m:'cur', sun:true}, {d:15, m:'cur'}, {d:16, m:'cur'}, {d:17, m:'cur'}, {d:18, m:'cur'}, {d:19, m:'cur'}, {d:20, m:'cur', sat:true},
+                {d:21, m:'cur', sun:true}, {d:22, m:'cur'}, {d:23, m:'cur'}, {d:24, m:'cur'}, {d:25, m:'cur'}, {d:26, m:'cur'}, {d:27, m:'cur', sat:true},
+                {d:28, m:'cur', sun:true}, {d:29, m:'cur'}, {d:30, m:'cur'}, {d:1, m:'next'}, {d:2, m:'next'}, {d:3, m:'next'}, {d:4, m:'next'}
+            ];
+            
+            let row = document.createElement('tr');
+            days.forEach((day, idx) => {
+                let td = document.createElement('td');
+                if (day.m !== 'cur') td.className = "other-month";
+                if (day.sun) td.className += " sun";
+                if (day.sat) td.className += " sat";
+                
+                // 実際の日付をIDにして検索しやすくする (例: day-2026-06-26)
+                let dateStr = "2026-06-" + String(day.d).padStart(2, '0');
+                if (day.m === 'prev') dateStr = "2026-05-" + String(day.d).padStart(2, '0');
+                if (day.m === 'next') dateStr = "2026-07-" + String(day.d).padStart(2, '0');
+                
+                td.innerHTML = `<div class="day-num">${day.d}</div><div class="badge-list" id="day-${dateStr}"></div>`;
+                row.appendChild(td);
+                
+                if ((idx + 1) % 7 === 0) {
+                    tbody.appendChild(row);
+                    row = document.createElement('tr');
+                }
+            });
+        }
+
+        // 🌐 【受信】スプレッドシートからデータを取得してカレンダーにピン留めする
+        function loadCalendarDataFromServer() {
+            if(GAS_URL.includes("★")) return; // URL未設定時はスキップ
+            
+            fetch(GAS_URL + "?op=getCalendarData")
+            .then(res => res.json())
+            .then(data => {
+                // 車検予約データの反映
+                data.shaken.forEach(row => {
+                    let rawDate = new Date(row[3]);
+                    let formattedDate = rawDate.getFullYear() + "-" + String(rawDate.getMonth()+1).padStart(2,'0') + "-" + String(rawDate.getDate()).padStart(2,'0');
+                    let cell = document.getElementById("day-" + formattedDate);
+                    if(cell) {
+                        cell.innerHTML += `<span class="sched-badge badge-shaken" title="${row[7]}">📋 車検:${row[1]}</span>`;
+                    }
+                });
+                // 一般実績・予約データの反映
+                data.work.forEach(row => {
+                    let rawDate = new Date(row[3]);
+                    let formattedDate = rawDate.getFullYear() + "-" + String(rawDate.getMonth()+1).padStart(2,'0') + "-" + String(rawDate.getDate()).padStart(2,'0');
+                    let cell = document.getElementById("day-" + formattedDate);
+                    if(cell) {
+                        let isDone = row[4].includes("オイル") || row[7] !== "";
+                        let badgeClass = isDone ? "badge-done" : "badge-plan";
+                        let prefix = isDone ? "✅ [済] " : "📅 ";
+                        cell.innerHTML += `<span class="sched-badge ${badgeClass}">${prefix}${row[4].substring(0,4)}:${row[1]}</span>`;
+                    }
+                });
+            }).catch(err => console.log("データロードエラー:", err));
+        }
+
+        // 🌐 【送信】顧客情報の新規登録
+        function submitCustomer(e) {
+            e.preventDefault();
+            let payload = {
+                action: "registerCustomer",
+                name: document.getElementById('cust-name').value,
+                ruby: document.getElementById('cust-ruby').value,
+                tel: document.getElementById('cust-tel').value,
+                address: document.getElementById('cust-address').value,
+                store: currentStore,
+                carNumber: document.getElementById('car-number').value,
+                carModel: document.getElementById('car-model').value,
+                carVin: document.getElementById('car-vin').value,
+                carDate: document.getElementById('car-date').value
+            };
+            sendToSpreadsheet(payload, "顧客・車両フォルダーを作成しました！");
+        }
+
+        // 🌐 【送信】突発の作業実績保存
+        function submitWork(e) {
+            e.preventDefault();
+            let payload = {
+                action: "saveInstantWork",
+                customerInfo: targetCustName,
+                carNumber: targetCarNumber,
+                workDate: document.getElementById('work-date').value,
+                workCategory: document.getElementById('work-category').value,
+                mileage: document.getElementById('work-mileage').value,
+                location: document.getElementById('work-location').value,
+                detail: document.getElementById('work-detail').value
+            };
+            sendToSpreadsheet(payload, "走行距離を含む作業実績をスプレッドシートに保存しました！");
+        }
+
+        // 🌐 【送信】車検予約の保存
+        function submitShaken(e) {
+            e.preventDefault();
+            let payload = {
+                action: "saveShakenPlan",
+                customerInfo: document.getElementById('shaken-cust').value,
+                carNumber: "大宮 300 ぬ 7788",
+                shakenDate: document.getElementById('shaken-date').value,
+                location: document.getElementById('shaken-location').value,
+                daisha: document.getElementById('shaken-daisha').value,
+                hikitori: document.getElementById('shaken-hikitori').value,
+                memo: document.getElementById('shaken-memo').value
+            };
+            sendToSpreadsheet(payload, "車検予約をリクエストシステム連携で保存しました！");
+        }
+
+        // 🌐 スプレッドシートへデータをPOST送信する共通の仕組み
+        function sendToSpreadsheet(payload, successMessage) {
+            if(GAS_URL.includes("★")) {
+                alert("GASのURLが未設定のため、模擬保存しました（本番ではスプレッドシートに書き込まれます）。");
+                showPage('page-top');
+                return;
+            }
+            
+            document.getElementById('sync-status').innerText = "⏳ データ同期中...";
+            document.getElementById('sync-status').style.color = "#fbbf24";
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                alert(successMessage);
+                document.getElementById('sync-status').innerText = "🟢 オンライン（同期完了）";
+                document.getElementById('sync-status').style.color = "#34d399";
+                generateCalendarGrid();
+                loadCalendarDataFromServer(); // カレンダーを再描画して最新状態に
+                showPage('page-top');
+            })
+            .catch(err => {
+                alert("送信に失敗しました。GASの公開設定を確認してください。");
+                document.getElementById('sync-status').innerText = "🔴 同期エラー";
+                document.getElementById('sync-status').style.color = "#f87171";
+            });
+        }
+    </script>
+</body>
+</html>
