@@ -76,11 +76,11 @@
         .other-month { opacity: 0.25; background: #161e2e; }
 
         .badge-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: 55px; min-height: 20px; }
-        /* 🆕 予定バッジにポインターとホバーエフェクトを追加 */
         .sched-badge { font-size: 7.5pt; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; cursor: pointer; transition: opacity 0.15s; }
         .sched-badge:hover { opacity: 0.8; }
         .badge-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); } 
         .badge-shaken { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } 
+        .badge-plan { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(60, 165, 250, 0.3); } /* 🆕 一般予約用バッジカラー */
 
         /* フォーム要素 */
         .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
@@ -654,7 +654,7 @@
             }
         }
 
-        // 🆕 予定バッジをクリックした際にその詳細内容をポップアップ表示する関数 (新設)
+        // 予定バッジをクリックした際にその詳細内容をポップアップ表示する関数
         function showScheduleDetails(infoTextEscaped) {
             try {
                 const infoText = decodeURIComponent(infoTextEscaped);
@@ -664,7 +664,7 @@
             }
         }
 
-        // フォーム送信時のハンドラー
+        // フォーム送信時のハンドラー（状態フラグによってリクエストを自動分岐）
         function handleFormSubmit(e) {
             e.preventDefault();
             if (formMode === "edit") {
@@ -859,7 +859,7 @@
             console.log("カレンダーマスの生成完了");
         }
 
-        // サーバーから予定データを取得
+        // 💡 サーバーから全予定データを取得 ＆ マッピング（一般予約描画追加版）
         function loadCalendarDataFromServer() {
             const syncStatus = document.getElementById('sync-status');
             fetch(GAS_URL + "?op=getCalendarData")
@@ -867,7 +867,7 @@
             .then(function(data) {
                 if(!data) return;
                 
-                // 🆕 車検予定バッジの描画 ＆ クリックポップアップ連動
+                // ① 車検予約バッジの描画
                 if(data.shaken && Array.isArray(data.shaken)) {
                     data.shaken.forEach(function(row) {
                         try {
@@ -880,7 +880,6 @@
                                 let cell = document.getElementById(cellId);
                                 
                                 if(cell) {
-                                    // ポップアップに表示する詳細文言を成形
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
                                     let detailsText = `【入庫種別】 車検予約\n【顧客名】 ${row[1]} 様\n【予定日】 ${formattedDate}\n【受付店舗】 ${row[4] || '未定'}\n【代車有無】 ${row[5] || 'なし'}\n【引取希望】 ${row[6] || 'なし'}\n【要望メモ】 ${row[7] || '特になし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
@@ -892,7 +891,7 @@
                     });
                 }
                 
-                // 🆕 作業実績バッジの描画 ＆ クリックポップアップ連動
+                // ② 作業実績（済）バッジの描画
                 if(data.work && Array.isArray(data.work)) {
                     data.work.forEach(function(row) {
                         try {
@@ -905,7 +904,6 @@
                                 let cell = document.getElementById(cellId);
                                 
                                 if(cell) {
-                                    // ポップアップに表示する詳細文言を成形
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
                                     let detailsText = `【入庫種別】 作業完了実績\n【顧客名】 ${row[1]} 様\n【車両No】 ${row[2] || '不明'}\n【作業日】 ${formattedDate}\n【作業分類】 ${row[4] || '一般整備'}\n【走行距離】 ${row[5] || '0'} km\n【対応店舗】 ${row[6] || '不明'}\n【作業内容】 ${row[7] || '記述なし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
@@ -916,6 +914,32 @@
                         } catch(err) { console.error("実績行の読み込みスキップ:", err); }
                     });
                 }
+
+                // 🆕 ③ 一般予約バッジ（オイル交換・点検など）の描画ロジックを追加
+                if(data.plan && Array.isArray(data.plan)) {
+                    data.plan.forEach(function(row) {
+                        try {
+                            // row[4]に入庫予定日、row[1]に顧客情報、row[2]に作業区分、row[3]に店舗情報が入っている想定
+                            if(!row || !row[4]) return; 
+                            let d = new Date(row[4]);
+                            if(!isNaN(d.getTime())) {
+                                let mStr = String(d.getMonth() + 1).padStart(2, '0');
+                                let dStr = String(d.getDate()).padStart(2, '0');
+                                let cellId = "day-" + d.getFullYear() + "-" + mStr + "-" + dStr;
+                                let cell = document.getElementById(cellId);
+                                
+                                if(cell) {
+                                    let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
+                                    let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[3] || '未定'}`;
+                                    let detailsEscaped = encodeURIComponent(detailsText);
+
+                                    // カレンダーに青い一般予約バッジを生成
+                                    cell.innerHTML += `<span class="sched-badge badge-plan" onclick="showScheduleDetails('${detailsEscaped}')">📅 予約:${String(row[1]).substring(0,5)}</span>`;
+                                }
+                            }
+                        } catch(err) { console.error("一般予約行の読み込みスキップ:", err); }
+                    });
+                }
             })
             .catch(function(err) { 
                 console.error("サーバー通信エラーが起きましたが、カレンダー枠とメニューボタンの稼働は維持されます:", err); 
@@ -924,42 +948,6 @@
                     syncStatus.style.color = "#fbbf24";
                 }
             });
-        }
-
-        function submitCustomer(e) {
-            e.preventDefault();
-            let resolvedStore = (currentStore === "全店") ? "板橋ss" : currentStore;
-
-            sendToSpreadsheet({
-                action: "registerCustomer",
-                name: document.getElementById('cust-name').value,
-                ruby: document.getElementById('cust-ruby').value,
-                tel: document.getElementById('cust-tel').value,
-                address: document.getElementById('cust-address').value,
-                store: resolvedStore,
-                carNumber: document.getElementById('car-number').value,
-                carModel: document.getElementById('car-model').value,
-                carVin: document.getElementById('car-vin').value,
-                carDate: document.getElementById('car-date').value
-            }, "新規顧客データを保存しました！");
-        }
-
-        function submitEditCustomer(e) {
-            e.preventDefault();
-            sendToSpreadsheet({
-                action: "updateCustomer", 
-                originalName: originalCustNameForEdit,       
-                originalCarNumber: originalCarNumberForEdit, 
-                name: document.getElementById('cust-name').value,
-                ruby: document.getElementById('cust-ruby').value,
-                tel: document.getElementById('cust-tel').value,
-                address: document.getElementById('cust-address').value,
-                store: document.getElementById('cust-store-hidden').value, 
-                carNumber: document.getElementById('car-number').value,
-                carModel: document.getElementById('car-model').value,
-                carVin: document.getElementById('car-vin').value,
-                carDate: document.getElementById('car-date').value
-            }, "顧客・車両の登録情報を上書き編集しました！");
         }
 
         function submitShaken(e) {
