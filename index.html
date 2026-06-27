@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HIRAIWA 車両・店舗業務管理システム (Ver.2 スプレッドシート連動版)</title>
+    <title>HIRAIWA 車両・店舗業務管理システム (Ver.2 完全連動版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; min-height: 100vh; transition: background-color 0.3s; }
@@ -85,13 +85,13 @@
         .result-table th, .result-table td { padding: 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; }
         
         .btn-instant-work { background: #fbbf24; color: #0f172a; border: none; padding: 4px 10px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-edit-admin { background: #38bdf8; color: #0f172a; border: none; padding: 4px 10px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
@@ -105,7 +105,6 @@
             </div>
         </header>
 
-        <!-- ==================== ① トップ画面 ==================== -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -128,15 +127,13 @@
                     </div>
                 </div>
 
-                <!-- カレンダー -->
                 <div class="calendar-section">
-                    <div class="section-title">スケジュール・作業実績 (2026年6月)</div>
+                    <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
                         <table class="calendar-table">
                             <thead><tr><th style="color:#f87171">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color:#60a5fa">土</th></tr></thead>
                             <tbody id="calendar-body">
-                                <!-- JavaScriptで日付とスプレッドシートの予約バッジを自動展開します -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -147,7 +144,6 @@
             </div>
         </div>
 
-        <!-- ==================== ② 顧客登録画面 ==================== -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="submitCustomer(event)">
@@ -177,30 +173,24 @@
             </form>
         </div>
 
-        <!-- ==================== ③ 車両検索 画面 ==================== -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
-                <div class="section-title" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
+                <div class="section-title" id="search-title-text" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
                 <div class="form-grid" style="margin-top:15px;">
-                    <div class="form-group"><label>ナンバーを入力</label><input type="text" value="大宮 300"></div>
+                    <div class="form-group"><label>ナンバーを入力</label><input type="text" id="search-car-number" value="大宮 300"></div>
                 </div>
+                <button class="btn-submit-form" style="margin-top:15px; background:#fbbf24;" onclick="simulateSearchAction()">上記の条件でスプレッドシートから検索する</button>
             </div>
+            <div class="section-title">顧客フォルダー検索結果</div>
             <table class="result-table">
-                <thead><tr><th>管理店舗</th><th>車両ナンバー</th><th>車種</th><th>顧客名</th><th>突発の実績登録</th></tr></thead>
-                <tbody>
-                    <tr>
-                        <td style="color:#34d399; font-weight:bold;">朝霞店</td>
-                        <td>大宮 300 ぬ 7788</td>
-                        <td>エルグランド</td>
-                        <td>平岩 太郎</td>
-                        <td><button class="btn-instant-work" onclick="openInstantWork('平岩 太郎', '大宮 300 ぬ 7788')">⚡ 今やった作業を登録</button></td>
-                    </tr>
+                <thead><tr><th>管理店舗</th><th>車両ナンバー</th><th>車種</th><th>顧客名</th><th id="th-action-title">突発の実績登録</th></tr></thead>
+                <tbody id="search-table-rows">
+                    <tr><td colspan="5" style="text-align:center; color:#94a3b8;">【検索する】ボタンを押すと、スプレッドシートの登録顧客がリアルタイム表示されます。</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- ==================== ④ 突発の実績登録画面 ==================== -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -230,7 +220,6 @@
             </form>
         </div>
 
-        <!-- ==================== ⑤ 車検予約 登録画面 ==================== -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -261,7 +250,6 @@
             </form>
         </div>
 
-        <!-- ==================== ⑥ 一般予約 登録画面 ==================== -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -285,11 +273,11 @@
 
     </div>
 
-    <!-- ==================== 🛠️ データベース（GAS）双方向通信プログラム ==================== -->
     <script>
-        // 🚨 【最重要】ここにデプロイして発行された「ウェブアプリのURL」をコピペしてください！
+        // 🚨 連動用GASウェブアプリの確定URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
 
+        let isAdminMode = false;
         let currentStore = "朝霞店";
         let targetCustName = "";
         let targetCarNumber = "";
@@ -308,18 +296,27 @@
             const body = document.body;
             const btn = document.getElementById('role-toggle');
             const badge = document.getElementById('store-badge');
+            const searchTitle = document.getElementById('search-title-text');
+            
             if (body.classList.contains('admin-mode')) {
                 body.classList.remove('admin-mode');
                 btn.innerText = "一般スタッフ(朝霞店) 🔄";
                 badge.innerText = "朝霞店";
                 currentStore = "朝霞店";
+                isAdminMode = false;
+                searchTitle.innerText = "🔍 来店車両の検索・作業記録 (朝霞店データ限定)";
+                searchTitle.style.color = "#fbbf24";
             } else {
                 body.classList.add('admin-mode');
                 btn.innerText = "最高管理者 👑";
                 btn.classList.add('admin-active');
                 badge.innerText = "全店統合統括";
                 currentStore = "全店";
+                isAdminMode = true;
+                searchTitle.innerText = "⚙️ 全店顧客マスター管理（検索・全店横断・編集）";
+                searchTitle.style.color = "#ef4444";
             }
+            simulateSearchAction(); // 権限切り替え時に表を自動更新
         }
 
         function simulateICRead() {
@@ -337,7 +334,54 @@
             showPage('page-instant-work');
         }
 
-        // 📅 2026年6月の固定カレンダーを自動生成する関数
+        // 🔍 スプレッドシートからデータを取得して検索結果テーブルを作る本物の関数
+        function simulateSearchAction() {
+            if(GAS_URL.includes("★")) return;
+            
+            const tbody = document.getElementById('search-table-rows');
+            const thAction = document.getElementById('th-action-title');
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">⏳ スプレッドシートから顧客フォルダーを検索中...</td></tr>`;
+
+            fetch(GAS_URL + "?op=searchCustomers")
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = ""; 
+                
+                // 権限に応じて「自店のみ」か「全店表示」かをフィルター
+                const filteredData = data.filter(item => {
+                    if (isAdminMode) return true;
+                    return item.store === currentStore;
+                });
+
+                if(filteredData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">該当する顧客情報が見つかりません。</td></tr>`;
+                    return;
+                }
+
+                thAction.innerText = isAdminMode ? "管理者操作" : "突発の実績登録";
+
+                filteredData.forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="color:#34d399; font-weight:bold;">${item.store}</td>
+                        <td>${item.carNumber}</td>
+                        <td>${item.carModel}</td>
+                        <td>${item.name}</td>
+                        <td>
+                            ${isAdminMode ? 
+                              `<button class="btn-edit-admin" onclick="alert('${item.name}様のフォルダーを編集します')">✏️ 編集</button>` : 
+                              `<button class="btn-instant-work" onclick="openInstantWork('${item.name}', '${item.carNumber}')">⚡ 今やった作業を登録</button>`
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#f87171;">❌ データの読み込みに失敗しました。</td></tr>`;
+            });
+        }
+
         function generateCalendarGrid() {
             const tbody = document.getElementById('calendar-body');
             tbody.innerHTML = "";
@@ -356,7 +400,6 @@
                 if (day.sun) td.className += " sun";
                 if (day.sat) td.className += " sat";
                 
-                // 実際の日付をIDにして検索しやすくする (例: day-2026-06-26)
                 let dateStr = "2026-06-" + String(day.d).padStart(2, '0');
                 if (day.m === 'prev') dateStr = "2026-05-" + String(day.d).padStart(2, '0');
                 if (day.m === 'next') dateStr = "2026-07-" + String(day.d).padStart(2, '0');
@@ -371,14 +414,12 @@
             });
         }
 
-        // 🌐 【受信】スプレッドシートからデータを取得してカレンダーにピン留めする
         function loadCalendarDataFromServer() {
-            if(GAS_URL.includes("★")) return; // URL未設定時はスキップ
+            if(GAS_URL.includes("★")) return;
             
             fetch(GAS_URL + "?op=getCalendarData")
             .then(res => res.json())
             .then(data => {
-                // 車検予約データの反映
                 data.shaken.forEach(row => {
                     let rawDate = new Date(row[3]);
                     let formattedDate = rawDate.getFullYear() + "-" + String(rawDate.getMonth()+1).padStart(2,'0') + "-" + String(rawDate.getDate()).padStart(2,'0');
@@ -387,7 +428,6 @@
                         cell.innerHTML += `<span class="sched-badge badge-shaken" title="${row[7]}">📋 車検:${row[1]}</span>`;
                     }
                 });
-                // 一般実績・予約データの反映
                 data.work.forEach(row => {
                     let rawDate = new Date(row[3]);
                     let formattedDate = rawDate.getFullYear() + "-" + String(rawDate.getMonth()+1).padStart(2,'0') + "-" + String(rawDate.getDate()).padStart(2,'0');
@@ -402,7 +442,6 @@
             }).catch(err => console.log("データロードエラー:", err));
         }
 
-        // 🌐 【送信】顧客情報の新規登録
         function submitCustomer(e) {
             e.preventDefault();
             let payload = {
@@ -420,7 +459,6 @@
             sendToSpreadsheet(payload, "顧客・車両フォルダーを作成しました！");
         }
 
-        // 🌐 【送信】突発の作業実績保存
         function submitWork(e) {
             e.preventDefault();
             let payload = {
@@ -436,7 +474,6 @@
             sendToSpreadsheet(payload, "走行距離を含む作業実績をスプレッドシートに保存しました！");
         }
 
-        // 🌐 【送信】車検予約の保存
         function submitShaken(e) {
             e.preventDefault();
             let payload = {
@@ -452,14 +489,7 @@
             sendToSpreadsheet(payload, "車検予約をリクエストシステム連携で保存しました！");
         }
 
-        // 🌐 スプレッドシートへデータをPOST送信する共通の仕組み
         function sendToSpreadsheet(payload, successMessage) {
-            if(GAS_URL.includes("★")) {
-                alert("GASのURLが未設定のため、模擬保存しました（本番ではスプレッドシートに書き込まれます）。");
-                showPage('page-top');
-                return;
-            }
-            
             document.getElementById('sync-status').innerText = "⏳ データ同期中...";
             document.getElementById('sync-status').style.color = "#fbbf24";
 
@@ -473,7 +503,7 @@
                 document.getElementById('sync-status').innerText = "🟢 オンライン（同期完了）";
                 document.getElementById('sync-status').style.color = "#34d399";
                 generateCalendarGrid();
-                loadCalendarDataFromServer(); // カレンダーを再描画して最新状態に
+                loadCalendarDataFromServer(); 
                 showPage('page-top');
             })
             .catch(err => {
