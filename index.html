@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HIRAIWA 車両・店舗業務管理システム (Ver.3.2 店舗切替完全対応版)</title>
+    <title>HIRAIWA 車両・店舗業務管理システム (Ver.3.2 安定版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; min-height: 100vh; }
@@ -16,22 +16,15 @@
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 20px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .system-title { font-size: 16pt; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
-        
-        /* 店舗選択セレクトボックスのスタイル調整（クリック可能に） */
-        .store-select-header { 
-            background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 24px 4px 10px; border-radius: 6px; font-size: 9pt; font-weight: bold; cursor: pointer;
-            outline: none; -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%2338bdf8' d='M0 0l5 5 5-5z'/></svg>");
-            background-repeat: no-repeat; background-position: right 8px center;
-        }
-        
+        .store-badge { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 10px; border-radius: 6px; font-size: 9pt; font-weight: bold; }
         .user-info { font-size: 9.5pt; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+        
         .btn-toggle-role { background: #334155; color: #cbd5e1; border: none; padding: 4px 8px; font-size: 8pt; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-toggle-role.admin-active { background: #ef4444; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
 
         body.admin-mode header { border-color: #ef4444; }
         body.admin-mode .system-title { color: #ef4444; }
-        body.admin-mode .store-select-header { color: #ef4444; border-color: #ef4444; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23ef4444' d='M0 0l5 5 5-5z'/></svg>"); }
+        body.admin-mode .store-badge { color: #ef4444; border-color: #ef4444; }
 
         /* メインレイアウト */
         .main-layout { display: grid; grid-template-columns: 290px 1fr; gap: 25px; }
@@ -51,39 +44,41 @@
         .btn-info .action-header { color: #60a5fa; }
         .action-desc { font-size: 8pt; color: #94a3b8; line-height: 1.4; }
 
-        /* コンパクトカレンダー */
-        .calendar-container { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; }
+        /* カレンダーエリア */
+        .calendar-section { width: 100%; }
+        .calendar-container { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; width: 100%; }
         .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .calendar-table th { padding: 6px 0; font-size: 8.5pt; color: #94a3b8; text-align: center; border-bottom: 2px solid #334155; }
-        .calendar-table td { height: 75px; border: 1px solid #334155; padding: 4px; vertical-align: top; }
-        .day-num { font-size: 8.5pt; font-weight: bold; color: #cbd5e1; margin-bottom: 3px; }
+        .calendar-table th { padding: 8px 0; font-size: 8.5pt; color: #94a3b8; text-align: center; border-bottom: 2px solid #334155; }
+        .calendar-table td { height: 85px; border: 1px solid #334155; padding: 6px; vertical-align: top; background: #1e293b; }
+        .day-num { font-size: 9pt; font-weight: bold; color: #cbd5e1; margin-bottom: 4px; }
         .sun .day-num { color: #f87171; }
         .sat .day-num { color: #60a5fa; }
-        .other-month { opacity: 0.25; }
+        .other-month { opacity: 0.25; background: #161e2e; }
 
-        .badge-list { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 50px; }
-        .sched-badge { font-size: 7pt; padding: 1px 3px; border-radius: 3px; font-weight: bold; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; }
+        .badge-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: 55px; }
+        .sched-badge { font-size: 7.5pt; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; }
         .badge-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); } 
         .badge-shaken { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } 
         .badge-plan { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); } 
 
-        /* フォーム共通 */
-        .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; position: relative; z-index: 1; }
+        /* フォーム要素 */
+        .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full-width { grid-column: span 2; }
         label { font-size: 9pt; color: #94a3b8; font-weight: 600; }
         
+        /* フォームパーツ共通：ネイティブ動作と高反応性を確保 */
         input[type="text"], input[type="tel"], input[type="date"], input[type="number"], select, textarea { 
             width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: #f8fafc; font-size: 10pt; 
-            position: relative; z-index: 2; cursor: pointer;
+            appearance: auto; -webkit-appearance: select; cursor: pointer;
         }
         textarea { height: 80px; resize: none; cursor: text; }
         input[type="text"], input[type="tel"], input[type="date"], input[type="number"] { cursor: text; }
         
         .km-input-wrapper { position: relative; display: flex; align-items: center; }
         .km-input-wrapper input { padding-right: 40px; }
-        .km-unit { position: absolute; right: 12px; color: #64748b; font-size: 9.5pt; font-weight: bold; z-index: 3; }
+        .km-unit { position: absolute; right: 12px; color: #64748b; font-size: 9.5pt; font-weight: bold; }
 
         /* IC車検証読み取り */
         .ic-reader-box { background: #0f172a; border: 1px solid #38bdf8; border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -91,9 +86,9 @@
         .btn-ic-read { background: #38bdf8; color: #0f172a; border: none; padding: 10px 18px; font-weight: bold; font-size: 9.5pt; border-radius: 6px; cursor: pointer; }
 
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
-        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; position: relative; z-index: 2; }
+        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
         
-        /* テーブル */
+        /* 結果テーブル */
         .result-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 15px; margin-bottom: 30px; }
         .result-table th, .result-table td { padding: 12px 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; vertical-align: middle; }
         
@@ -117,21 +112,12 @@
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
-                <select class="store-select-header" id="header-store-select" onchange="changeCurrentStore(this.value)">
-                    <option value="板橋ss">板橋ss</option>
-                    <option value="セルフ志村ss">セルフ志村ss</option>
-                    <option value="小茂根ss">小茂根ss</option>
-                    <option value="セルフ赤羽西ss">セルフ赤羽西ss</option>
-                    <option value="東坂下ss">東坂下ss</option>
-                    <option value="セルフ高島平ss">セルフ高島平ss</option>
-                    <option value="武蔵関ss">武蔵関ss</option>
-                    <option value="上板工場">上板工場</option>
-                </select>
+                <span class="store-badge" id="store-badge">板橋ss</span>
             </div>
             <div class="header-right">
                 <div class="user-info">
                     <span>ログイン: <strong style="color:#fff;">相原 広史 様</strong></span>
-                    <button class="btn-toggle-role" id="role-toggle" onclick="toggleAdminMode()">一般スタッフ 🔄</button>
+                    <button class="btn-toggle-role" id="role-toggle" onclick="toggleAdminMode()">一般スタッフ(板橋ss) 🔄</button>
                 </div>
             </div>
         </header>
@@ -162,8 +148,19 @@
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
                         <table class="calendar-table">
-                            <thead><tr><th style="color:#f87171">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color:#60a5fa">土</th></tr></thead>
-                            <tbody id="calendar-body"></tbody>
+                            <thead>
+                                <tr>
+                                    <th style="color:#f87171">日</th>
+                                    <th>月</th>
+                                    <th>火</th>
+                                    <th>水</th>
+                                    <th>木</th>
+                                    <th>金</th>
+                                    <th style="color:#60a5fa">土</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calendar-body">
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -187,7 +184,7 @@
                     </div>
                 </div>
                 <div class="form-section">
-                    <div class="section-title" style="color:#38bdf8">🚗 2. 車旧情報の登録</div>
+                    <div class="section-title" style="color:#38bdf8">🚗 2. 車両情報の登録</div>
                     <div class="ic-reader-box">
                         <div class="ic-status-text"><strong>💳 電子車検証 IC読み取り機能</strong><br>リーダーに車検証を乗せてスキャン。</div>
                         <button type="button" class="btn-ic-read" onclick="simulateICRead()">💳 IC車検証を読み取る</button>
@@ -304,4 +301,330 @@
                             <label>引取希望</label>
                             <select id="shaken-hikitori" required><option>お客様来店</option><option>店舗引取</option></select>
                         </div>
-                        <div class="form-group full-width"><label>要望メモ</label><textarea id
+                        <div class="form-group full-width"><label>要望メモ</label><textarea id="shaken-memo"></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:20px; background:#ef4444; color:#fff;">📋 車検予約を登録</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="page-plan-reg" class="page">
+            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <form id="form-plan" onsubmit="submitPlan(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#60a5fa">📅 一般予約スケジュールの登録</div>
+                    <div class="form-grid" style="margin-top:15px;">
+                        <div class="form-group full-width">
+                            <label>顧客・車両</label>
+                            <select id="plan-cust" required><option value="相原 広史">相原 広史 様 / エルグランド</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>作業予約区分</label>
+                            <select id="plan-category" required><option>🛢️ オイル交換</option><option>🛠️ 一般整備</option><option>🔍 定期点検</option></select>
+                        </div>
+                        <div class="form-group"><label>入庫予定日</label><input type="date" id="plan-date" value="2026-06-27" required></div>
+                        <div class="form-group">
+                            <label>予約受付店舗</label>
+                            <select id="plan-store" required>
+                                <option value="板橋ss">板橋ss</option>
+                                <option value="セルフ志村ss">セルフ志村ss</option>
+                                <option value="小茂根ss">小茂根ss</option>
+                                <option value="セルフ赤羽西ss">セルフ赤羽西ss</option>
+                                <option value="東坂下ss">東坂下ss</option>
+                                <option value="セルフ高島平ss">セルフ高島平ss</option>
+                                <option value="武蔵関ss">武蔵関ss</option>
+                                <option value="上板工場">上板工場</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit-form" style="margin-top:20px; background:#60a5fa; color:#0f172a;">📅 予約を登録する</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
+
+        let isAdminMode = false;
+        let currentStore = "板橋ss";
+        let targetCustName = "";
+        let targetCarNumber = "";
+
+        // ページ読み込み時に即座にカレンダー枠を作成し、その後サーバーからデータを非同期で取得
+        window.onload = function() {
+            try {
+                generateCalendarGrid();
+                loadCalendarDataFromServer();
+            } catch (e) {
+                console.error("初期化エラー:", e);
+            }
+        };
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+        }
+
+        function toggleAdminMode() {
+            const body = document.body;
+            const btn = document.getElementById('role-toggle');
+            const badge = document.getElementById('store-badge');
+            const searchTitle = document.getElementById('search-title-text');
+            
+            if (body.classList.contains('admin-mode')) {
+                body.classList.remove('admin-mode');
+                btn.innerText = "一般スタッフ(板橋ss) 🔄";
+                badge.innerText = "板橋ss";
+                currentStore = "板橋ss";
+                isAdminMode = false;
+                if(searchTitle) {
+                    searchTitle.innerText = "🔍 来店車両の検索・作業記録";
+                    searchTitle.style.color = "#fbbf24";
+                }
+            } else {
+                body.classList.add('admin-mode');
+                btn.innerText = "最高管理者 👑";
+                badge.innerText = "全店統合統括";
+                currentStore = "全店";
+                isAdminMode = true;
+                if(searchTitle) {
+                    searchTitle.innerText = "⚙️ 全店顧客マスター管理";
+                    searchTitle.style.color = "#ef4444";
+                }
+            }
+            simulateSearchAction(); 
+        }
+
+        function simulateICRead() {
+            alert('車検証スキャン成功 🔓');
+            document.getElementById('car-number').value = "所沢 330 あ 1111";
+            document.getElementById('car-model').value = "エルグランド";
+            document.getElementById('car-vin').value = "E52-104592";
+            document.getElementById('car-date').value = "2021年3月";
+        }
+
+        function openInstantWork(name, carNum) {
+            targetCustName = name;
+            targetCarNumber = carNum;
+            const targetDisp = document.getElementById('work-target-display');
+            if(targetDisp) targetDisp.innerText = name + " 様 / " + carNum;
+            showPage('page-instant-work');
+        }
+
+        function toggleHistoryBox(id) {
+            const el = document.getElementById(id);
+            if(el) el.style.display = el.style.display === "block" ? "none" : "block";
+        }
+
+        function toNormalizeStandard(str) {
+            if(!str) return "";
+            return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).toLowerCase();
+        }
+
+        function simulateSearchAction() {
+            const tbody = document.getElementById('search-table-rows');
+            if(!tbody) return;
+            
+            const inputEl = document.getElementById('search-car-number');
+            const inputVal = inputEl ? toNormalizeStandard(inputEl.value.trim()) : ""; 
+            
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">⏳ 検索中...</td></tr>`;
+
+            fetch(GAS_URL + "?op=searchCustomers")
+            .then(res => res.json())
+            .then(custData => {
+                fetch(GAS_URL + "?op=getCalendarData")
+                .then(res => res.json())
+                .then(historyData => {
+                    tbody.innerHTML = ""; 
+
+                    const uniqueCustomers = [];
+                    custData.forEach(item => {
+                        if (!uniqueCustomers.some(u => u.carNumber === item.carNumber && u.name === item.name)) {
+                            uniqueCustomers.push(item);
+                        }
+                    });
+
+                    const filteredData = uniqueCustomers.filter(item => {
+                        const isStoreMatch = isAdminMode ? true : (item.store === currentStore);
+                        return isStoreMatch && (inputVal === "" || toNormalizeStandard(item.carNumber).includes(inputVal));
+                    });
+
+                    if(filteredData.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">該当データなし</td></tr>`;
+                        return;
+                    }
+
+                    filteredData.forEach((item, idx) => {
+                        let tr = document.createElement('tr');
+                        const boxId = `history-box-${idx}`; 
+                        
+                        let matchedWorks = [];
+                        if(historyData && historyData.work) {
+                            historyData.work.forEach(wRow => {
+                                if (toNormalizeStandard(wRow[2]).includes(toNormalizeStandard(item.carNumber))) {
+                                    matchedWorks.push({ dateObj: new Date(wRow[3]), location: wRow[6] || '店舗', category: wRow[4], mileage: wRow[5], detail: wRow[7] });
+                                }
+                            });
+                        }
+                        matchedWorks.sort((a, b) => b.dateObj - a.dateObj);
+
+                        let historyHtml = `<div class="history-wrapper" id="${boxId}"><div class="history-title-banner">📊 作業履歴</div>`;
+                        matchedWorks.forEach(w => {
+                            let fDate = w.dateObj.getFullYear() + "/" + (w.dateObj.getMonth()+1) + "/" + w.dateObj.getDate();
+                            historyHtml += `<div class="history-item"><div class="history-meta"><span class="history-tag-date">📅 ${fDate} [${w.location}]</span><span>⚡ ${w.mileage} km</span></div><div>${w.category}: ${w.detail}</div></div>`;
+                        });
+                        historyHtml += `</div>`;
+
+                        tr.innerHTML = `
+                            <td>[${item.store}]<br><strong>${item.name} 様</strong></td>
+                            <td><strong style="color:#38bdf8">${item.carNumber}</strong><br><span style="color:#94a3b8; font-size:8pt;">${item.carModel}</span></td>
+                            <td>
+                                <div class="action-btn-group">
+                                    <button class="btn-view-history" onclick="toggleHistoryBox('${boxId}')">📋 履歴</button>
+                                    ${isAdminMode ? `<button class="btn-edit-admin" onclick="alert('編集画面へ')">✏️ 編集</button>` : `<button class="btn-instant-work" onclick="openInstantWork('${item.name}', '${item.carNumber}')">⚡ 実績登録</button>`}
+                                </div>
+                            </td>`;
+                        tbody.appendChild(tr);
+
+                        let hTr = document.createElement('tr');
+                        let hTd = document.createElement('td'); hTd.colSpan = 3; hTd.style.padding = "0"; hTd.innerHTML = historyHtml;
+                        hTr.appendChild(hTd); tbody.appendChild(hTr);
+                    });
+                }).catch(() => { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 履歴データの同期に失敗しました</td></tr>`; });
+            }).catch(() => { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 顧客データの同期に失敗しました</td></tr>`; });
+        }
+
+        function generateCalendarGrid() {
+            const tbody = document.getElementById('calendar-body'); 
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            
+            let days = [
+                {d:31, m:'prev'}, {d:1, m:'cur'}, {d:2, m:'cur'}, {d:3, m:'cur'}, {d:4, m:'cur'}, {d:5, m:'cur'}, {d:6, m:'cur', sat:true},
+                {d:7, m:'cur', sun:true}, {d:8, m:'cur'}, {d:9, m:'cur'}, {d:10, m:'cur'}, {d:11, m:'cur'}, {d:12, m:'cur'}, {d:13, m:'cur', sat:true},
+                {d:14, m:'cur', sun:true}, {d:15, m:'cur'}, {d:16, m:'cur'}, {d:17, m:'cur'}, {d:18, m:'cur'}, {d:19, m:'cur'}, {d:20, m:'cur', sat:true},
+                {d:21, m:'cur', sun:true}, {d:22, m:'cur'}, {d:23, m:'cur'}, {d:24, m:'cur'}, {d:25, m:'cur'}, {d:26, m:'cur'}, {d:27, m:'cur', sat:true},
+                {d:28, m:'cur', sun:true}, {d:29, m:'cur'}, {d:30, m:'cur'}, {d:1, m:'next'}, {d:2, m:'next'}, {d:3, m:'next'}, {d:4, m:'next'}
+            ];
+            
+            let row = document.createElement('tr');
+            days.forEach((day, idx) => {
+                let td = document.createElement('td');
+                let classes = [];
+                if (day.m !== 'cur') classes.push("other-month");
+                if (day.sun) classes.push("sun"); 
+                if (day.sat) classes.push("sat");
+                if (classes.length > 0) td.className = classes.join(" ");
+                
+                let monthStr = "06";
+                if (day.m === 'prev') monthStr = "05";
+                if (day.m === 'next') monthStr = "07";
+                let dateStr = `2026-${monthStr}-${String(day.d).padStart(2, '0')}`;
+                
+                td.innerHTML = `<div class="day-num">${day.d}</div><div class="badge-list" id="day-${dateStr}"></div>`;
+                row.appendChild(td);
+                
+                if ((idx + 1) % 7 === 0) { 
+                    tbody.appendChild(row); 
+                    row = document.createElement('tr'); 
+                }
+            });
+        }
+
+        function loadCalendarDataFromServer() {
+            fetch(GAS_URL + "?op=getCalendarData")
+            .then(res => res.json())
+            .then(data => {
+                if(data.shaken) {
+                    data.shaken.forEach(row => {
+                        let d = new Date(row[3]);
+                        if(!isNaN(d)) {
+                            let cellId = `day-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                            let cell = document.getElementById(cellId);
+                            if(cell) cell.innerHTML += `<span class="sched-badge badge-shaken">📋 車検:${row[1]}</span>`;
+                        }
+                    });
+                }
+                if(data.work) {
+                    data.work.forEach(row => {
+                        let d = new Date(row[3]);
+                        if(!isNaN(d)) {
+                            let cellId = `day-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                            let cell = document.getElementById(cellId);
+                            if(cell) cell.innerHTML += `<span class="sched-badge badge-done">✅ [済] ${row[4].substring(0,4)}</span>`;
+                        }
+                    });
+                }
+            })
+            .catch(err => console.log("Googleスプレッドシートデータ非同期読み込みエラー:", err));
+        }
+
+        function submitCustomer(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "registerCustomer",
+                name: document.getElementById('cust-name').value,
+                ruby: document.getElementById('cust-ruby').value,
+                tel: document.getElementById('cust-tel').value,
+                address: document.getElementById('cust-address').value,
+                store: document.getElementById('cust-store-select').value,
+                carNumber: document.getElementById('car-number').value,
+                carModel: document.getElementById('car-model').value,
+                carVin: document.getElementById('car-vin').value,
+                carDate: document.getElementById('car-date').value
+            }, "新規顧客データを保存しました！");
+        }
+
+        function submitWork(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "saveInstantWork", customerInfo: targetCustName, carNumber: targetCarNumber,
+                workDate: document.getElementById('work-date').value, workCategory: document.getElementById('work-category').value,
+                mileage: document.getElementById('work-mileage').value, location: document.getElementById('work-location').value,
+                detail: document.getElementById('work-detail').value
+            }, "作業実績を保存しました！");
+        }
+
+        function submitShaken(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "saveShakenPlan", customerInfo: document.getElementById('shaken-cust').value, carNumber: "所沢 330 あ 1111",
+                shakenDate: document.getElementById('shaken-date').value, location: document.getElementById('shaken-location').value,
+                daisha: document.getElementById('shaken-daisha').value, hikitori: document.getElementById('shaken-hikitori').value,
+                memo: document.getElementById('shaken-memo').value
+            }, "車検予約を確定しました！");
+        }
+
+        function submitPlan(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "savePlan", customerInfo: document.getElementById('plan-cust').value,
+                category: document.getElementById('plan-category').value, date: document.getElementById('plan-date').value,
+                store: document.getElementById('plan-store').value
+            }, "一般予約を保存しました！");
+        }
+
+        function sendToSpreadsheet(payload, msg) {
+            const syncStatus = document.getElementById('sync-status');
+            if(syncStatus) syncStatus.innerText = "⏳ データ同期中...";
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(() => {
+                alert(msg); 
+                if(syncStatus) {
+                    syncStatus.innerText = "🟢 オンライン（同期完了）";
+                    syncStatus.style.color = "#34d399";
+                }
+                generateCalendarGrid(); 
+                loadCalendarDataFromServer(); 
+                showPage('page-top');
+            })
+            .catch(() => { alert("同期エラーが発生しました"); });
+        }
+    </script>
+</body>
+</html>
