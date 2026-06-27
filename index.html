@@ -127,13 +127,6 @@
         .btn-shaken-booking { background: #f87171; color: #ffffff; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-plan-booking { background: #60a5fa; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-edit-admin { background: #fbbf24; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        
-        .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
-        .history-wrapper { display: none; margin-top: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 8.5pt; color: #cbd5e1; width: 100%; }
-        .history-title-banner { font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px; font-size: 9pt; }
-        .history-item { border-bottom: 1px dashed #1e293b; padding: 8px 0; }
-        .history-item:last-child { border-bottom: none; }
-        .history-meta { display: flex; justify-content: space-between; font-weight: bold; color: #f8fafc; margin-bottom: 3px; }
     </style>
 </head>
 <body>
@@ -173,7 +166,7 @@
                         <div class="action-desc">新規顧客と車両をセット登録。</div>
                     </button>
                     <button class="action-card btn-search" type="button" onclick="showPage('page-search')">
-                        <div class="action-header">🔍 車両検索 / 作業記録</div>
+                        <div class="action-header">🔍 車難検索 / 作業記録</div>
                         <div class="action-desc">車両ナンバー検索・実績入力。</div>
                     </button>
                     <button class="action-card btn-shaken" type="button" onclick="showPage('page-shaken-reg')">
@@ -651,7 +644,7 @@
             }
         }
 
-        // フォーム送信時のハンドラー
+        // フォーム送信時のハンドラー（状態フラグによってリクエストを自動分岐）
         function handleFormSubmit(e) {
             e.preventDefault();
             if (formMode === "edit") {
@@ -846,7 +839,7 @@
             console.log("カレンダーマスの生成完了");
         }
 
-        // 💡 サーバーから全予定データを取得 ＆ マッピング（インデックス修正完了版）
+        // 💡 サーバーから予定データを取得 ＆ マッピング（インデックス不整合を修正）
         function loadCalendarDataFromServer() {
             const syncStatus = document.getElementById('sync-status');
             fetch(GAS_URL + "?op=getCalendarData")
@@ -854,7 +847,7 @@
             .then(function(data) {
                 if(!data) return;
                 
-                // ① 車検予約バッジの描画
+                // ① 車検予定バッジの描画
                 if(data.shaken && Array.isArray(data.shaken)) {
                     data.shaken.forEach(function(row) {
                         try {
@@ -878,11 +871,10 @@
                     });
                 }
                 
-                // 🛠 ② 作業実績（済）バッジの描画 (「作業実績」シートの並びに完全同期)
+                // ② 作業実績（済）バッジの描画
                 if(data.work && Array.isArray(data.work)) {
                     data.work.forEach(function(row) {
                         try {
-                            // row[3]が作業日（シートのD列）
                             if(!row || !row[3]) return;
                             let d = new Date(row[3]);
                             if(!isNaN(d.getTime())) {
@@ -893,11 +885,9 @@
                                 
                                 if(cell) {
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
-                                    // row[1]:顧客名, row[2]:ナンバー, row[4]:分類, row[5]:走行距離, row[6]:対応場所, row[7]:内容
                                     let detailsText = `【入庫種別】 作業完了実績\n【顧客名】 ${row[1]} 様\n【車両No】 ${row[2] || '不明'}\n【作業日】 ${formattedDate}\n【作業分類】 ${row[4] || '一般整備'}\n【走行距離】 ${row[5] || '0'} km\n【対応店舗】 ${row[6] || '不明'}\n【作業内容】 ${row[7] || '記述なし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
 
-                                    // 分類テキスト全体（アイコン含む）をバッジ名に正しく適用
                                     let labelText = String(row[4] || "作業実績");
                                     cell.innerHTML += `<span class="sched-badge badge-done" onclick="showScheduleDetails('${detailsEscaped}')">✅ [済] ${labelText}</span>`;
                                 }
@@ -906,12 +896,13 @@
                     });
                 }
 
-                // ③ 一般予約バッジの描画
+                // 🛠 ③ 一般予約バッジの描画 (image_7249b3.pngのシートインデックス、およびカレンダー不整合の修正)
                 if(data.plan && Array.isArray(data.plan)) {
                     data.plan.forEach(function(row) {
                         try {
-                            if(!row || !row[4]) return; 
-                            let d = new Date(row[4]);
+                            // row[3]が予約日（スプレッドシートのD列）
+                            if(!row || !row[3]) return; 
+                            let d = new Date(row[3]);
                             if(!isNaN(d.getTime())) {
                                 let mStr = String(d.getMonth() + 1).padStart(2, '0');
                                 let dStr = String(d.getDate()).padStart(2, '0');
@@ -920,9 +911,11 @@
                                 
                                 if(cell) {
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
-                                    let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[3] || '未定'}`;
+                                    // row[1]: 顧客名, row[2]: 作業区分（オイル交換など）, row[4]: 予約受付店舗
+                                    let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[4] || '未定'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
 
+                                    // カレンダーに青い一般予約バッジを安全に生成
                                     cell.innerHTML += `<span class="sched-badge badge-plan" onclick="showScheduleDetails('${detailsEscaped}')">📅 予約:${String(row[1]).substring(0,5)}</span>`;
                                 }
                             }
