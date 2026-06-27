@@ -83,6 +83,7 @@
         /* フォーム要素 */
         .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-grid.action-bar-grid { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full-width { grid-column: span 2; }
         label { font-size: 9pt; color: #94a3b8; font-weight: 600; }
@@ -99,11 +100,17 @@
         .km-input-wrapper input { flex-grow: 1; }
         .km-unit { color: #64748b; font-size: 9.5pt; font-weight: bold; }
 
-        /* ナンバー検索ボタン（新設インライン用） */
+        /* ナンバー検索ボタン */
         .btn-inline-search {
             background: #fbbf24; color: #0f172a; border: none; padding: 10px 15px; font-size: 9.5pt; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.15s;
         }
         .btn-inline-search:hover { background: #f59e0b; }
+
+        /* 削除ボタン専用スタイル */
+        .btn-delete-form {
+            background: #ef4444; color: #ffffff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; transition: background 0.15s;
+        }
+        .btn-delete-form:hover { background: #dc2626; }
 
         /* ボタン */
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
@@ -131,14 +138,12 @@
 <body>
 
     <div class="container">
-        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
                 <span class="version-badge" id="version-check">✨Ver.5</span>
                 <span class="store-badge" id="store-badge">板橋ss</span>
                 
-                <!-- 店舗切り替えクイックボタンエリア -->
                 <div class="store-select-buttons" id="store-quick-selectors" style="display: flex; gap: 4px; margin-left: 8px;">
                     <button type="button" class="btn-store-pick active" onclick="changeCurrentStore('板橋ss', this)">板橋</button>
                     <button type="button" class="btn-store-pick" onclick="changeCurrentStore('セルフ志村ss', this)">志村</button>
@@ -158,7 +163,6 @@
             </div>
         </header>
 
-        <!-- ① トップ画面 -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -181,7 +185,6 @@
                     </button>
                 </div>
 
-                <!-- カレンダー -->
                 <div class="calendar-section">
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
@@ -198,8 +201,7 @@
                                 </tr>
                             </thead>
                             <tbody id="calendar-body">
-                                <!-- JSで安全に組み立てられます -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -210,14 +212,12 @@
             </div>
         </div>
 
-        <!-- ② 顧客登録画面 -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="submitCustomer(event)">
                 <div class="form-section">
                     <div class="section-title" style="color:#38bdf8">🚗 1. 車両情報の登録 ＆ ナンバー検索</div>
                     <div class="form-grid">
-                        <!-- 🆕 ナンバー入力にインライン検索機能を融合 -->
                         <div class="form-group full-width">
                             <label>登録番号（ナンバー）</label>
                             <div style="display: flex; gap: 8px; width: 100%;">
@@ -244,12 +244,11 @@
             </form>
         </div>
 
-        <!-- ⑦ 登録情報の編集画面 -->
         <div id="page-edit-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-edit-customer" onsubmit="submitEditCustomer(event)">
                 <div class="form-section">
-                    <div class="section-title" style="color:#fbbf24">👤 1. 顧客情報の編集</div>
+                    <div class="section-title" id="edit-page-main-title" style="color:#fbbf24">👤 1. 顧客情報の編集</div>
                     <div class="form-grid" style="margin-top:15px;">
                         <div class="form-group"><label>お名前</label><input type="text" id="edit-cust-name" required></div>
                         <div class="form-group"><label>フリガナ</label><input type="text" id="edit-cust-ruby" required></div>
@@ -266,12 +265,15 @@
                         <div class="form-group"><label>初度登録年月</label><input type="text" id="edit-car-date" required></div>
                     </div>
                     <input type="hidden" id="edit-cust-store">
-                    <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#fbbf24;">📁 編集を保存する</button>
+                    
+                    <div class="form-grid action-bar-grid">
+                        <button type="button" class="btn-delete-form" onclick="requestDeleteCustomer()">🗑️ この情報を削除</button>
+                        <button type="submit" class="btn-submit-form" style="background:#fbbf24;">📁 編集を保存する</button>
+                    </div>
                 </div>
             </form>
         </div>
 
-        <!-- ③ 車両検索 画面 -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
@@ -290,7 +292,6 @@
             </table>
         </div>
 
-        <!-- ④ 突発の実績登録画面 -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -332,7 +333,6 @@
             </form>
         </div>
 
-        <!-- ⑤ 車検予約 登録画面 -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -342,8 +342,7 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="shaken-cust" required>
-                                <!-- 動的に割り当てられます -->
-                            </select>
+                                </select>
                         </div>
                         <div class="form-group"><label>車検入庫予定日</label><input type="date" id="shaken-date" required></div>
                         <div class="form-group">
@@ -374,7 +373,6 @@
             </form>
         </div>
 
-        <!-- ⑥ 一般予約 登録画面 -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -384,8 +382,7 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="plan-cust" required>
-                                <!-- 動的に割り当てられます -->
-                            </select>
+                                </select>
                         </div>
                         <div class="form-group">
                             <label>作業予約区分</label>
@@ -523,7 +520,7 @@
             showPage('page-instant-work');
         }
 
-        // 🆕 登録フォームのナンバーインライン車両検索ロジック (新設)
+        // 登録フォームのナンバーインライン車両検索ロジック
         function searchCarFromRegistrationField() {
             const inputEl = document.getElementById('car-number');
             const statusEl = document.getElementById('cust-register-search-status');
@@ -544,11 +541,9 @@
             .then(custData => {
                 if(!Array.isArray(custData)) custData = [];
                 
-                // ナンバーの部分一致、または完全一致する既存の車両を検出
                 const match = custData.find(item => item && toNormalizeStandard(item.carNumber).indexOf(targetNum) !== -1);
                 
                 if(match) {
-                    // 発見した車両・名義データを各フォームフィールドへ自動マッピング
                     document.getElementById('car-model').value = match.carModel || "";
                     document.getElementById('car-vin').value = match.carVin || "";
                     document.getElementById('car-date').value = match.carDate || "";
@@ -593,6 +588,19 @@
             } catch(err) {
                 console.error("編集データの読み込みに失敗しました:", err);
                 alert("データ展開エラーが発生しました");
+            }
+        }
+
+        // 🆕 データ削除要求の確認ダイアログおよび送信処理 (新設)
+        function requestDeleteCustomer() {
+            const isConfirmed = confirm(`【確認】\n顧客名: ${originalCustNameForEdit} 様\n車両ナンバー: ${originalCarNumberForEdit}\n\nこの顧客および車両登録情報をシステムから完全に削除してもよろしいですか？\n(この操作は取り消せません)`);
+            
+            if (isConfirmed) {
+                sendToSpreadsheet({
+                    action: "deleteCustomer", // GAS側で一行削除を判別するためのアクションキー
+                    originalName: originalCustNameForEdit,
+                    originalCarNumber: originalCarNumberForEdit
+                }, "顧客・車両情報を完全に削除しました。");
             }
         }
 
@@ -697,7 +705,6 @@
                         if(isAdminMode) {
                             btnHTML += '<button class="btn-edit-admin" type="button" onclick="alert(\'管理者用編集画面(未実装)\')">✏️ 管理編集</button>';
                         } else {
-                            // 🆕 ボタン文言を「編集」へと変更
                             btnHTML += '<button class="btn-edit-admin" style="background:#fbbf24; color:#0f172a;" type="button" onclick="openEditCustomerPage(\'' + itemJsonStr + '\')">✏️ 編集</button>';
                             btnHTML += '<button class="btn-instant-work" type="button" onclick="openInstantWork(\'' + item.name + '\', \'' + item.carNumber + '\')">⚡ 実績登録</button>';
                             btnHTML += '<button class="btn-shaken-booking" type="button" onclick="openBookingPage(\'page-shaken-reg\', \'' + item.name + '\', \'' + item.carNumber + '\', \'' + item.carModel + '\')">📋 車検予約</button>';
@@ -843,7 +850,7 @@
                 carModel: document.getElementById('edit-car-model').value,
                 carVin: document.getElementById('edit-car-vin').value,
                 carDate: document.getElementById('edit-car-date').value
-            }, "顧客の登録情報を上書き編集しました！");
+            }, "顧客・車両の登録情報を上書き編集しました！");
         }
 
         function submitWork(e) {
