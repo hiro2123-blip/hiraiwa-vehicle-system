@@ -123,18 +123,20 @@
         .btn-shaken-booking { background: #f87171; color: #ffffff; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-plan-booking { background: #60a5fa; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-edit-admin { background: #fbbf24; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-edit-history { background: #fbbf24; color: #0f172a; border: none; padding: 2px 6px; font-size: 7.5pt; font-weight: bold; border-radius: 3px; cursor: pointer; margin-left: 8px; }
         
         .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
         .history-wrapper { display: none; margin-top: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 8.5pt; color: #cbd5e1; width: 100%; }
         .history-title-banner { font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px; font-size: 9pt; }
         .history-item { border-bottom: 1px dashed #1e293b; padding: 8px 0; }
         .history-item:last-child { border-bottom: none; }
-        .history-meta { display: flex; justify-content: space-between; font-weight: bold; color: #f8fafc; margin-bottom: 3px; }
+        .history-meta { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #f8fafc; margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
@@ -160,6 +162,7 @@
             </div>
         </header>
 
+        <!-- ① トップ画面 -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -182,6 +185,7 @@
                     </button>
                 </div>
 
+                <!-- カレンダー -->
                 <div class="calendar-section">
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
@@ -198,7 +202,8 @@
                                 </tr>
                             </thead>
                             <tbody id="calendar-body">
-                                </tbody>
+                                <!-- JSで安全に組み立てられます -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -209,6 +214,7 @@
             </div>
         </div>
 
+        <!-- ② 顧客登録 兼 編集画面 -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="handleFormSubmit(event)">
@@ -248,6 +254,7 @@
             </form>
         </div>
 
+        <!-- ③ 車両検索 画面 -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
@@ -266,6 +273,7 @@
             </table>
         </div>
 
+        <!-- ④ 突発の実績登録画面 -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -307,6 +315,52 @@
             </form>
         </div>
 
+        <!-- 🆕 ⑧ 履歴の修正・削除専用フォーム -->
+        <div id="page-edit-work" class="page">
+            <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
+            <form id="form-edit-work" onsubmit="submitEditWork(event)">
+                <div class="form-section">
+                    <div class="section-title" style="color:#fbbf24">✏️ 作業履歴の編集</div>
+                    <div style="background:#0f172a; padding:12px; border-radius:6px; margin: 15px 0; font-size:9.5pt;">
+                        <strong>対象顧客:</strong> <span id="edit-work-target-display" style="color:#fbbf24; font-weight:bold;">-</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>作業実施日</label><input type="date" id="edit-work-date" required></div>
+                        <div class="form-group">
+                            <label>作業の分類</label>
+                            <select id="edit-work-category" required><option>🛢️ オイル交換・消耗品</option><option>🛠️ 一般整備 / 点検</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>入庫時走行距離</label>
+                            <div class="km-input-wrapper">
+                                <input type="number" id="edit-work-mileage" required>
+                                <span class="km-unit">km</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>対応・受付店舗</label>
+                            <select id="edit-work-location" required>
+                                <option value="板橋ss">板橋ss</option>
+                                <option value="セルフ志村ss">セルフ志村ss</option>
+                                <option value="小茂根ss">小茂根ss</option>
+                                <option value="セルフ赤羽西ss">セルフ赤羽西ss</option>
+                                <option value="東坂下ss">東坂下ss</option>
+                                <option value="セルフ高島平ss">セルフ高島平ss</option>
+                                <option value="武蔵関ss">武蔵関ss</option>
+                                <option value="上板工場">上板工場</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width"><label>作業内容メモ</label><textarea id="edit-work-detail" required></textarea></div>
+                    </div>
+                    <div class="form-grid" style="margin-top: 25px;">
+                        <button type="button" class="btn-delete-form" onclick="requestDeleteWorkInline()">🗑️ この履歴を削除</button>
+                        <button type="submit" class="btn-submit-form" style="background:#fbbf24; color:#0f172a;">📁 編集を保存する</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ⑤ 車検予約 登録画面 -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -316,7 +370,8 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="shaken-cust" required>
-                                </select>
+                                <!-- 動的に割り当てられます -->
+                            </select>
                         </div>
                         <div class="form-group"><label>車検入庫予定日</label><input type="date" id="shaken-date" required></div>
                         <div class="form-group">
@@ -347,6 +402,7 @@
             </form>
         </div>
 
+        <!-- ⑥ 一般予約 登録画面 -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -356,7 +412,8 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="plan-cust" required>
-                                </select>
+                                <!-- 動的に割り当てられます -->
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>作業予約区分</label>
@@ -396,6 +453,8 @@
         let formMode = "create";
         let originalCarNumberForEdit = "";
         let originalCustNameForEdit = "";
+        
+        let targetWorkIdForEdit = ""; // 履歴編集用のID保持
 
         // 起動時の初期処理
         document.addEventListener('DOMContentLoaded', function() {
@@ -481,6 +540,32 @@
             const targetDisp = document.getElementById('work-target-display');
             if(targetDisp) targetDisp.innerText = name + " 様 / " + carNum;
             showPage('page-instant-work');
+        }
+
+        // 🆕 履歴から「編集」を押されたときの処理
+        function openEditWorkPage(workJsonEscaped) {
+            try {
+                const w = JSON.parse(decodeURIComponent(workJsonEscaped));
+                targetWorkIdForEdit = w.id;
+                
+                const targetDisp = document.getElementById('edit-work-target-display');
+                if(targetDisp) targetDisp.innerText = w.custName + " 様 / " + w.carNumber;
+                
+                // 日付を YYYY-MM-DD にパースしてセット
+                let d = new Date(w.dateObj);
+                let y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+                
+                document.getElementById('edit-work-date').value = y + "-" + m + "-" + day;
+                document.getElementById('edit-work-category').value = w.category || "🛢️ オイル交換・消耗品";
+                document.getElementById('edit-work-mileage').value = w.mileage || "";
+                document.getElementById('edit-work-location').value = w.location || "板橋ss";
+                document.getElementById('edit-work-detail').value = w.detail || "";
+                
+                showPage('page-edit-work');
+            } catch(e) {
+                console.error("作業履歴の読み込みに失敗:", e);
+                alert("データの展開に失敗しました。");
+            }
         }
 
         function searchCarFromRegistrationField() {
@@ -602,6 +687,18 @@
                 }, "顧客・車両情報を完全に削除しました。");
             }
         }
+        
+        // 🆕 実績の削除
+        function requestDeleteWorkInline() {
+            if(!targetWorkIdForEdit) return;
+            const isConfirmed = confirm(`【確認】\nこの作業履歴を完全に削除してもよろしいですか？\n(この操作は取り消せません)`);
+            if (isConfirmed) {
+                sendToSpreadsheet({
+                    action: "deleteWork",
+                    workId: targetWorkIdForEdit
+                }, "作業履歴を削除しました。");
+            }
+        }
 
         function showScheduleDetails(infoTextEscaped) {
             try {
@@ -718,7 +815,17 @@
                         if(historyData && Array.isArray(historyData.work)) {
                             historyData.work.forEach(function(wRow) {
                                 if (wRow && wRow[2] && toNormalizeStandard(wRow[2]).indexOf(toNormalizeStandard(item.carNumber)) !== -1) {
-                                    matchedWorks.push({ dateObj: new Date(wRow[3]), location: wRow[6] || '店舗', category: wRow[4], mileage: wRow[5], detail: wRow[7] });
+                                    // 🆕 wRow[0]に記録IDを保持
+                                    matchedWorks.push({ 
+                                        id: wRow[0],
+                                        custName: wRow[1],
+                                        carNumber: wRow[2],
+                                        dateObj: new Date(wRow[3]), 
+                                        category: wRow[4], 
+                                        mileage: wRow[5], 
+                                        location: wRow[6] || '店舗', 
+                                        detail: wRow[7] 
+                                    });
                                 }
                             });
                         }
@@ -727,7 +834,19 @@
                         let historyHtml = '<div class="history-wrapper" id="' + boxId + '"><div class="history-title-banner">📊 作業履歴</div>';
                         matchedWorks.forEach(function(w) {
                             let fDate = w.dateObj.getFullYear() + "/" + (w.dateObj.getMonth()+1) + "/" + w.dateObj.getDate();
-                            historyHtml += '<div class="history-item"><div class="history-meta"><span style="color:#38bdf8;">📅 ' + fDate + ' [' + w.location + ']</span><span style="color:#34d399;">⚡ ' + w.mileage + ' km</span></div><div style="color:#fff;">' + w.category + ': ' + w.detail + '</div></div>';
+                            const workJsonStr = encodeURIComponent(JSON.stringify(w));
+                            
+                            historyHtml += `
+                            <div class="history-item">
+                                <div class="history-meta">
+                                    <span style="color:#38bdf8;">📅 ${fDate} [${w.location}]</span>
+                                    <span>
+                                        <span style="color:#34d399; margin-right: 8px;">⚡ ${w.mileage} km</span>
+                                        <button type="button" class="btn-edit-history" onclick="openEditWorkPage('${workJsonStr}')">✏️ 編集</button>
+                                    </span>
+                                </div>
+                                <div style="color:#fff;">${w.category}: ${w.detail}</div>
+                            </div>`;
                         });
                         historyHtml += '</div>';
 
@@ -889,6 +1008,20 @@
             }, "作業実績を保存しました！");
         }
 
+        // 🆕 作業履歴の上書き編集送信
+        function submitEditWork(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "updateWork", 
+                workId: targetWorkIdForEdit,
+                workDate: document.getElementById('edit-work-date').value, 
+                workCategory: document.getElementById('edit-work-category').value,
+                mileage: document.getElementById('edit-work-mileage').value, 
+                location: document.getElementById('edit-work-location').value,
+                detail: document.getElementById('edit-work-detail').value
+            }, "作業履歴を上書き編集しました！");
+        }
+
         function submitShaken(e) {
             e.preventDefault();
             sendToSpreadsheet({
@@ -915,12 +1048,10 @@
             }, "一般予約を保存しました！");
         }
 
-        // 💡 修正箇所：ボタンをロックして二重登録を完全防止する仕組み
         function sendToSpreadsheet(payload, msg) {
             const syncStatus = document.getElementById('sync-status');
             const submitBtns = document.querySelectorAll('button[type="submit"], .btn-delete-form');
             
-            // 全ての送信ボタンを一時的に押せなくする（二重送信ロック）
             submitBtns.forEach(btn => { 
                 btn.disabled = true; 
                 btn.style.opacity = "0.5"; 
@@ -945,7 +1076,6 @@
                 alert("同期エラーが発生しました。GAS側のウェブアプリURLや公開設定を確認してください。"); 
             })
             .finally(function() {
-                // 通信が終わったらボタンのロックを解除
                 submitBtns.forEach(btn => { 
                     btn.disabled = false; 
                     btn.style.opacity = "1"; 
