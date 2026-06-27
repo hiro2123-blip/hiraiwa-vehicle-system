@@ -109,12 +109,8 @@
 
         /* ボタン群 */
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
-        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
-        
-        /* 削除ボタン専用スタイル */
-        .btn-delete-form {
-            background: #ef4444; color: #ffffff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; transition: background 0.15s;
-        }
+        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; transition: opacity 0.2s; }
+        .btn-delete-form { background: #ef4444; color: #ffffff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; transition: opacity 0.2s; }
         .btn-delete-form:hover { background: #dc2626; }
 
         /* 結果テーブル */
@@ -127,6 +123,13 @@
         .btn-shaken-booking { background: #f87171; color: #ffffff; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-plan-booking { background: #60a5fa; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-edit-admin { background: #fbbf24; color: #0f172a; border: none; padding: 7px 12px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        
+        .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
+        .history-wrapper { display: none; margin-top: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 8.5pt; color: #cbd5e1; width: 100%; }
+        .history-title-banner { font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px; font-size: 9pt; }
+        .history-item { border-bottom: 1px dashed #1e293b; padding: 8px 0; }
+        .history-item:last-child { border-bottom: none; }
+        .history-meta { display: flex; justify-content: space-between; font-weight: bold; color: #f8fafc; margin-bottom: 3px; }
     </style>
 </head>
 <body>
@@ -166,7 +169,7 @@
                         <div class="action-desc">新規顧客と車両をセット登録。</div>
                     </button>
                     <button class="action-card btn-search" type="button" onclick="showPage('page-search')">
-                        <div class="action-header">🔍 車難検索 / 作業記録</div>
+                        <div class="action-header">🔍 車両検索 / 作業記録</div>
                         <div class="action-desc">車両ナンバー検索・実績入力。</div>
                     </button>
                     <button class="action-card btn-shaken" type="button" onclick="showPage('page-shaken-reg')">
@@ -382,6 +385,7 @@
     </div>
 
     <script>
+        // ▼ 必ずご自身が新しくデプロイした「ウェブアプリのURL」に差し替えてください ▼
         const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
 
         let isAdminMode = false;
@@ -393,28 +397,15 @@
         let originalCarNumberForEdit = "";
         let originalCustNameForEdit = "";
 
-        // 起動時の初期処理および安全なカレンダー枠の隔離生成
+        // 起動時の初期処理
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM準備完了：カレンダー枠の生成および日付の初期化を実行します。");
-            
             const todayStr = "2026-06-27";
             if(document.getElementById('work-date')) document.getElementById('work-date').value = todayStr;
             if(document.getElementById('shaken-date')) document.getElementById('shaken-date').value = todayStr;
             if(document.getElementById('plan-date')) document.getElementById('plan-date').value = todayStr;
 
-            try {
-                generateCalendarGrid();
-            } catch(e) { 
-                console.error("カレンダー枠生成で例外検知:", e); 
-            }
-            
-            setTimeout(function() {
-                try {
-                    loadCalendarDataFromServer();
-                } catch(e) { 
-                    console.error("データ取得処理 of カレンダーに失敗:", e); 
-                }
-            }, 150);
+            try { generateCalendarGrid(); } catch(e) { console.error(e); }
+            setTimeout(function() { try { loadCalendarDataFromServer(); } catch(e) { console.error(e); } }, 150);
         });
 
         function showFormForCreate() {
@@ -433,14 +424,11 @@
             document.getElementById('form-action-buttons-container').innerHTML = `
                 <button type="submit" id="btn-submit-create" class="btn-submit-form" style="background:#38bdf8;">📁 新規登録する</button>
             `;
-            
             showPage('page-cust');
         }
 
-        // 店舗のクイックボタン切り替えロジック
         function changeCurrentStore(storeName, element) {
             currentStore = storeName;
-            
             const badge = document.getElementById('store-badge');
             if(badge) badge.innerText = storeName;
             
@@ -451,56 +439,42 @@
             buttons.forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
             
-            if(document.getElementById('page-search').classList.contains('active')) {
-                simulateSearchAction();
-            }
+            if(document.getElementById('page-search').classList.contains('active')) simulateSearchAction();
         }
 
-        // 画面切り替え用の関数
         function showPage(pageId) {
-            console.log("要求された遷移先:", pageId);
-            try {
-                const pages = document.querySelectorAll('.page');
-                for (let i = 0; i < pages.length; i++) {
-                    pages[i].style.display = 'none';
-                    pages[i].classList.remove('active');
-                }
-                const target = document.getElementById(pageId);
-                if (target) {
-                    target.style.display = 'block';
-                    target.classList.add('active');
-                    window.scrollTo(0, 0);
-                }
-            } catch(err) {
-                console.error("showPage内で予期せぬエラー:", err);
+            const pages = document.querySelectorAll('.page');
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.display = 'none';
+                pages[i].classList.remove('active');
+            }
+            const target = document.getElementById(pageId);
+            if (target) {
+                target.style.display = 'block';
+                target.classList.add('active');
+                window.scrollTo(0, 0);
             }
         }
 
-        // 権限モード切り替え
         function toggleAdminMode() {
-            try {
-                const body = document.body;
-                const btn = document.getElementById('role-toggle');
-                const badge = document.getElementById('store-badge');
-                
-                if (body.classList.contains('admin-mode')) {
-                    body.classList.remove('admin-mode');
-                    if(btn) btn.innerText = `一般スタッフ(${currentStore}) 🔄`;
-                    if(badge) badge.innerText = currentStore;
-                    isAdminMode = false;
-                } else {
-                    body.classList.add('admin-mode');
-                    if(btn) btn.innerText = "最高管理者 👑";
-                    if(badge) badge.innerText = "全店統合統括";
-                    isAdminMode = true;
-                }
-                simulateSearchAction(); 
-            } catch(e) {
-                console.error(e);
+            const body = document.body;
+            const btn = document.getElementById('role-toggle');
+            const badge = document.getElementById('store-badge');
+            
+            if (body.classList.contains('admin-mode')) {
+                body.classList.remove('admin-mode');
+                if(btn) btn.innerText = `一般スタッフ(${currentStore}) 🔄`;
+                if(badge) badge.innerText = currentStore;
+                isAdminMode = false;
+            } else {
+                body.classList.add('admin-mode');
+                if(btn) btn.innerText = "最高管理者 👑";
+                if(badge) badge.innerText = "全店統合統括";
+                isAdminMode = true;
             }
+            simulateSearchAction(); 
         }
 
-        // 突発実績登録のウィンドウ展開
         function openInstantWork(name, carNum) {
             targetCustName = name;
             targetCarNumber = carNum;
@@ -509,7 +483,6 @@
             showPage('page-instant-work');
         }
 
-        // 登録画面のナンバーインライン検索
         function searchCarFromRegistrationField() {
             const inputEl = document.getElementById('car-number');
             const statusEl = document.getElementById('cust-register-search-status');
@@ -575,13 +548,11 @@
                 }
             })
             .catch(err => {
-                console.error(err);
                 statusEl.innerText = "❌ 車両データベースとの通信に失敗しました。";
                 statusEl.style.color = "#f87171";
             });
         }
 
-        // 車両検索一覧から「編集」が押された際の実装
         function openEditCustomerPage(itemJsonEscaped) {
             try {
                 const item = JSON.parse(decodeURIComponent(itemJsonEscaped));
@@ -615,12 +586,10 @@
                 `;
                 showPage('page-cust');
             } catch(err) {
-                console.error(err);
                 alert("データ展開エラーが発生しました");
             }
         }
 
-        // 画面内での直接削除リクエスト
         function requestDeleteCustomerInline() {
             if (!originalCustNameForEdit || !originalCarNumberForEdit) return;
             const isConfirmed = confirm(`【確認】\n顧客名: ${originalCustNameForEdit} 様\n車両ナンバー: ${originalCarNumberForEdit}\n\nこの顧客および車両登録情報をシステムから完全に削除してもよろしいですか？\n(この操作は取り消せません)`);
@@ -634,17 +603,13 @@
             }
         }
 
-        // 予定バッジをクリックした際にその詳細内容をポップアップ表示する関数
         function showScheduleDetails(infoTextEscaped) {
             try {
                 const infoText = decodeURIComponent(infoTextEscaped);
                 alert(`📋 予約・作業実績の詳細内容\n\n${infoText}`);
-            } catch(e) {
-                console.error("詳細表示エラー:", e);
-            }
+            } catch(e) { }
         }
 
-        // フォーム送信時のハンドラー（状態フラグによってリクエストを自動分岐）
         function handleFormSubmit(e) {
             e.preventDefault();
             if (formMode === "edit") {
@@ -679,22 +644,17 @@
             }
         }
 
-        // 各種予約画面の構築ロジック
         function openBookingPage(pageId, name, carNum, carModel) {
             targetCustName = name;
             targetCarNumber = carNum;
             
             if (pageId === 'page-shaken-reg') {
                 const selectEl = document.getElementById('shaken-cust');
-                if(selectEl) {
-                    selectEl.innerHTML = `<option value="${name}">${name} 様 / ${carNum} (${carModel})</option>`;
-                }
+                if(selectEl) selectEl.innerHTML = `<option value="${name}">${name} 様 / ${carNum} (${carModel})</option>`;
                 showPage('page-shaken-reg');
             } else if (pageId === 'page-plan-reg') {
                 const selectEl = document.getElementById('plan-cust');
-                if(selectEl) {
-                    selectEl.innerHTML = `<option value="${name}">${name} 様 / ${carNum} (${carModel})</option>`;
-                }
+                if(selectEl) selectEl.innerHTML = `<option value="${name}">${name} 様 / ${carNum} (${carModel})</option>`;
                 showPage('page-plan-reg');
             }
         }
@@ -711,7 +671,6 @@
             }).toLowerCase();
         }
 
-        // リアルタイム車両検索機能
         function simulateSearchAction() {
             const tbody = document.getElementById('search-table-rows');
             if(!tbody) return;
@@ -797,8 +756,8 @@
                         hTd.colSpan = 3; hTd.style.padding = "0"; hTd.innerHTML = historyHtml;
                         hTr.appendChild(hTd); tbody.appendChild(hTr);
                     });
-                }).catch(function(e) { console.error(e); tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 履歴同期に失敗しました</td></tr>`; });
-            }).catch(function(e) { console.error(e); tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 顧客データ同期に失敗しました</td></tr>`; });
+                }).catch(function(e) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 履歴同期に失敗しました</td></tr>`; });
+            }).catch(function(e) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 顧客データ同期に失敗しました</td></tr>`; });
         }
 
         function generateCalendarGrid() {
@@ -836,10 +795,8 @@
                     row = document.createElement('tr'); 
                 }
             });
-            console.log("カレンダーマスの生成完了");
         }
 
-        // 💡 サーバーから予定データを取得 ＆ マッピング（インデックス不整合を修正）
         function loadCalendarDataFromServer() {
             const syncStatus = document.getElementById('sync-status');
             fetch(GAS_URL + "?op=getCalendarData")
@@ -847,7 +804,6 @@
             .then(function(data) {
                 if(!data) return;
                 
-                // ① 車検予定バッジの描画
                 if(data.shaken && Array.isArray(data.shaken)) {
                     data.shaken.forEach(function(row) {
                         try {
@@ -863,15 +819,13 @@
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
                                     let detailsText = `【入庫種別】 車検予約\n【顧客名】 ${row[1]} 様\n【予定日】 ${formattedDate}\n【受付店舗】 ${row[4] || '未定'}\n【代車有無】 ${row[5] || 'なし'}\n【引取希望】 ${row[6] || 'なし'}\n【要望メモ】 ${row[7] || '特になし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
-
                                     cell.innerHTML += `<span class="sched-badge badge-shaken" onclick="showScheduleDetails('${detailsEscaped}')">📋 車検:${row[1]}</span>`;
                                 }
                             }
-                        } catch(err) { console.error("車検行の読み込みスキップ:", err); }
+                        } catch(err) {}
                     });
                 }
                 
-                // ② 作業実績（済）バッジの描画
                 if(data.work && Array.isArray(data.work)) {
                     data.work.forEach(function(row) {
                         try {
@@ -887,22 +841,19 @@
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
                                     let detailsText = `【入庫種別】 作業完了実績\n【顧客名】 ${row[1]} 様\n【車両No】 ${row[2] || '不明'}\n【作業日】 ${formattedDate}\n【作業分類】 ${row[4] || '一般整備'}\n【走行距離】 ${row[5] || '0'} km\n【対応店舗】 ${row[6] || '不明'}\n【作業内容】 ${row[7] || '記述なし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
-
                                     let labelText = String(row[4] || "作業実績");
                                     cell.innerHTML += `<span class="sched-badge badge-done" onclick="showScheduleDetails('${detailsEscaped}')">✅ [済] ${labelText}</span>`;
                                 }
                             }
-                        } catch(err) { console.error("実績行の読み込みスキップ:", err); }
+                        } catch(err) {}
                     });
                 }
 
-                // 🛠 ③ 一般予約バッジの描画 (image_7249b3.pngのシートインデックス、およびカレンダー不整合の修正)
                 if(data.plan && Array.isArray(data.plan)) {
                     data.plan.forEach(function(row) {
                         try {
-                            // row[3]が予約日（スプレッドシートのD列）
-                            if(!row || !row[3]) return; 
-                            let d = new Date(row[3]);
+                            if(!row || !row[4]) return; 
+                            let d = new Date(row[4]);
                             if(!isNaN(d.getTime())) {
                                 let mStr = String(d.getMonth() + 1).padStart(2, '0');
                                 let dStr = String(d.getDate()).padStart(2, '0');
@@ -911,25 +862,31 @@
                                 
                                 if(cell) {
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
-                                    // row[1]: 顧客名, row[2]: 作業区分（オイル交換など）, row[4]: 予約受付店舗
-                                    let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[4] || '未定'}`;
+                                    let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[3] || '未定'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
-
-                                    // カレンダーに青い一般予約バッジを安全に生成
                                     cell.innerHTML += `<span class="sched-badge badge-plan" onclick="showScheduleDetails('${detailsEscaped}')">📅 予約:${String(row[1]).substring(0,5)}</span>`;
                                 }
                             }
-                        } catch(err) { console.error("一般予約行の読み込みスキップ:", err); }
+                        } catch(err) {}
                     });
                 }
             })
             .catch(function(err) { 
-                console.error("サーバー通信エラーが起きましたが、カレンダー枠とメニューボタンの稼働は維持されます:", err); 
                 if(syncStatus) {
                     syncStatus.innerText = "🟡 オフライン（ローカルプレビュー中）";
                     syncStatus.style.color = "#fbbf24";
                 }
             });
+        }
+
+        function submitWork(e) {
+            e.preventDefault();
+            sendToSpreadsheet({
+                action: "saveInstantWork", customerInfo: targetCustName, carNumber: targetCarNumber,
+                workDate: document.getElementById('work-date').value, workCategory: document.getElementById('work-category').value,
+                mileage: document.getElementById('work-mileage').value, location: document.getElementById('work-location').value,
+                detail: document.getElementById('work-detail').value
+            }, "作業実績を保存しました！");
         }
 
         function submitShaken(e) {
@@ -958,9 +915,20 @@
             }, "一般予約を保存しました！");
         }
 
+        // 💡 修正箇所：ボタンをロックして二重登録を完全防止する仕組み
         function sendToSpreadsheet(payload, msg) {
             const syncStatus = document.getElementById('sync-status');
+            const submitBtns = document.querySelectorAll('button[type="submit"], .btn-delete-form');
+            
+            // 全ての送信ボタンを一時的に押せなくする（二重送信ロック）
+            submitBtns.forEach(btn => { 
+                btn.disabled = true; 
+                btn.style.opacity = "0.5"; 
+                btn.style.cursor = "not-allowed";
+            });
+            
             if(syncStatus) syncStatus.innerText = "⏳ データ同期中...";
+            
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(function(res) { return res.json(); })
             .then(function() {
@@ -973,7 +941,17 @@
                 loadCalendarDataFromServer(); 
                 showPage('page-top');
             })
-            .catch(function() { alert("同期エラーが発生しました。GAS側のウェブアプリURLや公開設定、CORS制限等を確認してください。"); });
+            .catch(function() { 
+                alert("同期エラーが発生しました。GAS側のウェブアプリURLや公開設定を確認してください。"); 
+            })
+            .finally(function() {
+                // 通信が終わったらボタンのロックを解除
+                submitBtns.forEach(btn => { 
+                    btn.disabled = false; 
+                    btn.style.opacity = "1"; 
+                    btn.style.cursor = "pointer";
+                });
+            });
         }
     </script>
 </body>
