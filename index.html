@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HIRAIWA 車両・店舗業務管理システム (Ver.2 完全連動版)</title>
+    <title>HIRAIWA 車両・店舗業務管理システム (Ver.2 履歴・操作統合版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; min-height: 100vh; transition: background-color 0.3s; }
@@ -81,17 +81,33 @@
 
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
         .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
-        .result-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 15px; }
-        .result-table th, .result-table td { padding: 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; }
         
-        .btn-instant-work { background: #fbbf24; color: #0f172a; border: none; padding: 4px 10px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        .btn-edit-admin { background: #38bdf8; color: #0f172a; border: none; padding: 4px 10px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        /* テーブル装飾 */
+        .result-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 15px; margin-bottom: 30px; }
+        .result-table th, .result-table td { padding: 12px 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; vertical-align: middle; }
+        
+        /* ボタン類の配置と配色 */
+        .action-btn-group { display: flex; gap: 8px; align-items: center; }
+        .btn-instant-work { background: #fbbf24; color: #0f172a; border: none; padding: 7px 14px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .btn-instant-work:hover { background: #f59e0b; }
+        .btn-view-history { background: #38bdf8; color: #0f172a; border: none; padding: 7px 14px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .btn-view-history:hover { background: #0ea5e9; }
+        .btn-edit-admin { background: #ef4444; color: #ffffff; border: none; padding: 7px 14px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
+        
+        /* 日付別過去履歴表示用エリアの追加装飾 */
+        .history-wrapper { display: none; margin-top: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 8.5pt; color: #cbd5e1; width: 100%; grid-column: span 3; }
+        .history-title-banner { font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px; font-size: 9pt; display: flex; justify-content: space-between; }
+        .history-item { border-bottom: 1px dashed #1e293b; padding: 8px 0; }
+        .history-item:last-child { border-bottom: none; }
+        .history-meta { display: flex; justify-content: space-between; font-weight: bold; color: #f8fafc; margin-bottom: 3px; }
+        .history-tag-date { background: #1e293b; color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 8pt; }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
@@ -105,6 +121,7 @@
             </div>
         </header>
 
+        <!-- ==================== ① トップ画面 ==================== -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -127,13 +144,15 @@
                     </div>
                 </div>
 
+                <!-- カレンダー -->
                 <div class="calendar-section">
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
                         <table class="calendar-table">
                             <thead><tr><th style="color:#f87171">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color:#60a5fa">土</th></tr></thead>
                             <tbody id="calendar-body">
-                                </tbody>
+                                <!-- JavaScriptで日付とスプレッドシートの予約バッジを自動展開します -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -144,6 +163,7 @@
             </div>
         </div>
 
+        <!-- ==================== ② 顧客登録画面 ==================== -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="submitCustomer(event)">
@@ -173,24 +193,26 @@
             </form>
         </div>
 
+        <!-- ==================== ③ 車両検索 画面 ==================== -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
                 <div class="section-title" id="search-title-text" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
                 <div class="form-grid" style="margin-top:15px;">
-                    <div class="form-group"><label>車両ナンバー（下4桁のみでも検索可）</label><input type="text" id="search-car-number" placeholder="例：7788 や 大宮 300"></div>
+                    <div class="form-group"><label>車両ナンバー（大文字・小文字、下4桁のみでも検索可）</label><input type="text" id="search-car-number" placeholder="例：1111 や 所沢 330"></div>
                 </div>
                 <button class="btn-submit-form" style="margin-top:15px; background:#fbbf24;" onclick="simulateSearchAction()">上記の条件でスプレッドシートから検索する</button>
             </div>
             <div class="section-title">顧客フォルダー検索結果</div>
             <table class="result-table">
-                <thead><tr><th>管理店舗</th><th>車両ナンバー</th><th>車種</th><th>顧客名</th><th id="th-action-title">突発の実績登録</th></tr></thead>
+                <thead><tr><th>管理店舗 / 顧客名</th><th>車両ナンバー / 車種</th><th>突発の実績登録</th></tr></thead>
                 <tbody id="search-table-rows">
-                    <tr><td colspan="5" style="text-align:center; color:#94a3b8;">【検索する】ボタンを押すと、条件に合う顧客フォルダーがリアルタイム表示されます。</td></tr>
+                    <tr><td colspan="3" style="text-align:center; color:#94a3b8;">【検索する】ボタンを押すと、条件に合う顧客フォルダーがリアルタイム表示されます。</td></tr>
                 </tbody>
             </table>
         </div>
 
+        <!-- ==================== ④ 突発の実績登録画面 ==================== -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -220,6 +242,7 @@
             </form>
         </div>
 
+        <!-- ==================== ⑤ 車検予約 登録画面 ==================== -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -250,6 +273,7 @@
             </form>
         </div>
 
+        <!-- ==================== ⑥ 一般予約 登録画面 ==================== -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -273,6 +297,7 @@
 
     </div>
 
+    <!-- ==================== 🛠️ データベース（GAS）双方向通信プログラム ==================== -->
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
 
@@ -333,52 +358,140 @@
             showPage('page-instant-work');
         }
 
+        // 💡 履歴表示エリアの開け閉めをコントロールするトグル関数
+        function toggleHistoryBox(id) {
+            const el = document.getElementById(id);
+            if(el.style.display === "block") {
+                el.style.display = "none";
+            } else {
+                el.style.display = "block";
+            }
+        }
+
+        // 🔍 【検索 ＆ ボタン横並び ＆ 日付別に並び替え展開版】
         function simulateSearchAction() {
             if(GAS_URL.includes("★")) return;
             
             const tbody = document.getElementById('search-table-rows');
-            const thAction = document.getElementById('th-action-title');
-            const inputVal = document.getElementById('search-car-number').value.trim(); 
+            const inputVal = document.getElementById('search-car-number').value.trim().toLowerCase(); 
             
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">⏳ スプレッドシートから顧客フォルダーを検索中...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">⏳ スプレッドシートから顧客情報と過去実績を検索中...</td></tr>`;
 
+            // ① 顧客マスターデータの取得
             fetch(GAS_URL + "?op=searchCustomers")
             .then(res => res.json())
-            .then(data => {
-                tbody.innerHTML = ""; 
+            .then(custData => {
                 
-                const filteredData = data.filter(item => {
-                    const isStoreMatch = isAdminMode ? true : (item.store === currentStore);
-                    const isCarNumberMatch = inputVal === "" ? true : (item.carNumber && item.carNumber.includes(inputVal));
-                    return isStoreMatch && isCarNumberMatch;
-                });
+                // ② 過去の作業実績データの取得
+                fetch(GAS_URL + "?op=getCalendarData")
+                .then(res => res.json())
+                .then(historyData => {
+                    tbody.innerHTML = ""; 
 
-                if(filteredData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">該当する顧客情報が見つかりません。</td></tr>`;
-                    return;
-                }
+                    // 重複した顧客データのユニーク化（1行化）
+                    const uniqueCustomers = [];
+                    custData.forEach(item => {
+                        const isExist = uniqueCustomers.some(u => u.carNumber === item.carNumber && u.name === item.name);
+                        if (!isExist) uniqueCustomers.push(item);
+                    });
 
-                thAction.innerText = isAdminMode ? "管理者操作" : "突発の実績登録";
+                    // 店舗権限 ＆ ナンバー部分一致での絞り込み
+                    const filteredData = uniqueCustomers.filter(item => {
+                        const isStoreMatch = isAdminMode ? true : (item.store === currentStore);
+                        const targetNumber = item.carNumber ? item.carNumber.toLowerCase() : "";
+                        const isCarNumberMatch = inputVal === "" ? true : targetNumber.includes(inputVal);
+                        return isStoreMatch && isCarNumberMatch;
+                    });
 
-                filteredData.forEach(item => {
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="color:#34d399; font-weight:bold;">${item.store}</td>
-                        <td>${item.carNumber}</td>
-                        <td>${item.carModel}</td>
-                        <td>${item.name}</td>
-                        <td>
-                            ${isAdminMode ? 
-                              `<button class="btn-edit-admin" onclick="alert('${item.name}様のフォルダーを編集します')">✏️ 編集</button>` : 
-                              `<button class="btn-instant-work" onclick="openInstantWork('${item.name}', '${item.carNumber}')">⚡ 今やった作業を登録</button>`
+                    if(filteredData.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">該当するお車情報が見つかりません。</td></tr>`;
+                        return;
+                    }
+
+                    // 1台ずつ行を作成
+                    filteredData.forEach((item, idx) => {
+                        let tr = document.createElement('tr');
+                        const boxId = `history-box-${idx}`; 
+                        
+                        // 💡 この車に紐づく過去の実績リストを抽出し、配列として確保する
+                        let matchedWorks = [];
+
+                        historyData.work.forEach(wRow => {
+                            const wCarNum = wRow[2] ? wRow[2].toLowerCase() : "";
+                            const itemCarNum = item.carNumber ? item.carNumber.toLowerCase() : "";
+                            
+                            if (wCarNum && (wCarNum.includes(itemCarNum) || itemCarNum.includes(wCarNum))) {
+                                matchedWorks.push({
+                                    dateObj: new Date(wRow[3]),
+                                    location: wRow[6] || '店舗',
+                                    category: wRow[4],
+                                    mileage: wRow[5],
+                                    detail: wRow[7]
+                                });
                             }
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
+                        });
+
+                        // 💡 取得した実績データを「日付の新しい順（降順）」に数式で並び替える処理
+                        matchedWorks.sort((a, b) => b.dateObj - a.dateObj);
+
+                        // 並び替えた結果をHTMLに流し込む
+                        let matchedHistoryHtml = `<div class="history-wrapper" id="${boxId}">`;
+                        matchedHistoryHtml += `<div class="history-title-banner"><span>📊 ${item.name} 様の過去作業履歴（日付順）</span></div>`;
+
+                        if (matchedWorks.length > 0) {
+                            matchedWorks.forEach(work => {
+                                let fDate = work.dateObj.getFullYear() + "/" + (work.dateObj.getMonth()+1) + "/" + work.dateObj.getDate();
+                                matchedHistoryHtml += `
+                                    <div class="history-item">
+                                        <div class="history-meta">
+                                            <span class="history-tag-date">📅 ${fDate}</span>
+                                            <span style="color:#34d399; font-weight:bold;">⚡ ${work.mileage} km</span>
+                                        </div>
+                                        <div style="color:#ffffff; font-weight:bold; margin-top:4px; margin-bottom: 2px;">作業項目: ${work.category}</div>
+                                        <div style="color:#94a3b8; padding-left:8px;">└ 詳細メモ: ${work.detail}</div>
+                                    </div>`;
+                            });
+                        } else {
+                            matchedHistoryHtml += `<div style="color:#64748b; text-align:center; padding:10px;">過去の突発作業実績はありません</div>`;
+                        }
+                        matchedHistoryHtml += `</div>`;
+
+                        // 画面構築（ご指定通り突発実績登録列に横並びに配置）
+                        tr.innerHTML = `
+                            <td>
+                                <span style="color:#34d399; font-weight:bold; font-size:8pt; display:block;">[${item.store}]</span>
+                                <strong>${item.name} 様</strong>
+                            </td>
+                            <td>
+                                <strong style="color:#38bdf8">${item.carNumber}</strong><br>
+                                <span style="color:#94a3b8; font-size:8pt;">${item.carModel}</span>
+                            </td>
+                            <td>
+                                <div class="action-btn-group">
+                                    <button class="btn-view-history" onclick="toggleHistoryBox('${boxId}')">📋 過去の作業を見る</button>
+                                    ${isAdminMode ? 
+                                      `<button class="btn-edit-admin" onclick="alert('${item.name}様のフォルダーを編集します')">✏️ 編集</button>` : 
+                                      `<button class="btn-instant-work" onclick="openInstantWork('${item.name}', '${item.carNumber}')">⚡ 今やった作業を登録</button>`
+                                    }
+                                </div>
+                            </td>
+                        `;
+                        
+                        tbody.appendChild(tr);
+
+                        // 💡 トグルで開閉する履歴枠をテーブルの直下（独立行）として挟み込む
+                        let hTr = document.createElement('tr');
+                        let hTd = document.createElement('td');
+                        hTd.colSpan = 3;
+                        hTd.style.padding = "0";
+                        hTd.innerHTML = matchedHistoryHtml;
+                        hTr.appendChild(hTd);
+                        tbody.appendChild(hTr);
+                    });
                 });
             })
             .catch(err => {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#f87171;">❌ データの読み込みに失敗しました。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ データの読み込みに失敗しました。</td></tr>`;
             });
         }
 
