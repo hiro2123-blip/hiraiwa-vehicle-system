@@ -163,7 +163,7 @@
                         <button type="button" class="btn-ic-read" onclick="simulateICRead()">💳 IC車検証を読み取る</button>
                     </div>
                     <div class="form-grid">
-                        <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="car-number" required placeholder="大宮 300 ぬ XXXX"></div>
+                        <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="car-number" required placeholder="大宮 300 ぬ 7788"></div>
                         <div class="form-group"><label>車種</label><input type="text" id="car-model" required placeholder="エルグランド"></div>
                         <div class="form-group"><label>車台番号</label><input type="text" id="car-vin" required placeholder="E52-XXXXXX"></div>
                         <div class="form-group"><label>初度登録年月</label><input type="text" id="car-date" required placeholder="2020年1月"></div>
@@ -178,7 +178,7 @@
             <div class="form-section">
                 <div class="section-title" id="search-title-text" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
                 <div class="form-grid" style="margin-top:15px;">
-                    <div class="form-group"><label>ナンバーを入力</label><input type="text" id="search-car-number" value="大宮 300"></div>
+                    <div class="form-group"><label>車両ナンバー（下4桁のみでも検索可）</label><input type="text" id="search-car-number" placeholder="例：7788 や 大宮 300"></div>
                 </div>
                 <button class="btn-submit-form" style="margin-top:15px; background:#fbbf24;" onclick="simulateSearchAction()">上記の条件でスプレッドシートから検索する</button>
             </div>
@@ -186,7 +186,7 @@
             <table class="result-table">
                 <thead><tr><th>管理店舗</th><th>車両ナンバー</th><th>車種</th><th>顧客名</th><th id="th-action-title">突発の実績登録</th></tr></thead>
                 <tbody id="search-table-rows">
-                    <tr><td colspan="5" style="text-align:center; color:#94a3b8;">【検索する】ボタンを押すと、スプレッドシートの登録顧客がリアルタイム表示されます。</td></tr>
+                    <tr><td colspan="5" style="text-align:center; color:#94a3b8;">【検索する】ボタンを押すと、条件に合う顧客フォルダーがリアルタイム表示されます。</td></tr>
                 </tbody>
             </table>
         </div>
@@ -274,7 +274,6 @@
     </div>
 
     <script>
-        // 🚨 連動用GASウェブアプリの確定URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbynK7l25JCIb16o2W8qbafxJTu5y9NcggF400c22cNOHgMyiZ64MRWh0U8OIvZ4ubDD/exec";
 
         let isAdminMode = false;
@@ -316,7 +315,7 @@
                 searchTitle.innerText = "⚙️ 全店顧客マスター管理（検索・全店横断・編集）";
                 searchTitle.style.color = "#ef4444";
             }
-            simulateSearchAction(); // 権限切り替え時に表を自動更新
+            simulateSearchAction(); 
         }
 
         function simulateICRead() {
@@ -334,12 +333,13 @@
             showPage('page-instant-work');
         }
 
-        // 🔍 スプレッドシートからデータを取得して検索結果テーブルを作る本物の関数
         function simulateSearchAction() {
             if(GAS_URL.includes("★")) return;
             
             const tbody = document.getElementById('search-table-rows');
             const thAction = document.getElementById('th-action-title');
+            const inputVal = document.getElementById('search-car-number').value.trim(); 
+            
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">⏳ スプレッドシートから顧客フォルダーを検索中...</td></tr>`;
 
             fetch(GAS_URL + "?op=searchCustomers")
@@ -347,10 +347,10 @@
             .then(data => {
                 tbody.innerHTML = ""; 
                 
-                // 権限に応じて「自店のみ」か「全店表示」かをフィルター
                 const filteredData = data.filter(item => {
-                    if (isAdminMode) return true;
-                    return item.store === currentStore;
+                    const isStoreMatch = isAdminMode ? true : (item.store === currentStore);
+                    const isCarNumberMatch = inputVal === "" ? true : (item.carNumber && item.carNumber.includes(inputVal));
+                    return isStoreMatch && isCarNumberMatch;
                 });
 
                 if(filteredData.length === 0) {
