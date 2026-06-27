@@ -83,7 +83,6 @@
         /* フォーム要素 */
         .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .form-grid.action-bar-grid { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full-width { grid-column: span 2; }
         label { font-size: 9pt; color: #94a3b8; font-weight: 600; }
@@ -106,16 +105,16 @@
         }
         .btn-inline-search:hover { background: #f59e0b; }
 
+        /* ボタン群 */
+        .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
+        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
+        
         /* 削除ボタン専用スタイル */
         .btn-delete-form {
             background: #ef4444; color: #ffffff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; transition: background 0.15s;
         }
         .btn-delete-form:hover { background: #dc2626; }
 
-        /* ボタン */
-        .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
-        .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
-        
         /* 結果テーブル */
         .result-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 15px; margin-bottom: 30px; }
         .result-table th, .result-table td { padding: 12px 10px; text-align: left; font-size: 9pt; border-bottom: 1px solid #334155; vertical-align: middle; }
@@ -170,7 +169,7 @@
             <div class="main-layout">
                 <div class="sidebar">
                     <div class="section-title">メニュー</div>
-                    <button class="action-card btn-cust" type="button" onclick="showPage('page-cust')">
+                    <button class="action-card btn-cust" type="button" onclick="showFormForCreate()">
                         <div class="action-header">🆕 顧客登録</div>
                         <div class="action-desc">新規顧客と車両をセット登録。</div>
                     </button>
@@ -217,12 +216,12 @@
             </div>
         </div>
 
-        <!-- ② 顧客登録画面 -->
+        <!-- ② 顧客登録 兼 編集画面（ハイブリッド一体型フォームへ進化） -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
-            <form id="form-customer" onsubmit="submitCustomer(event)">
+            <form id="form-customer" onsubmit="handleFormSubmit(event)">
                 <div class="form-section">
-                    <div class="section-title" style="color:#38bdf8">🚗 1. 車両情報の登録 ＆ ナンバー検索</div>
+                    <div class="section-title" id="form-section-title-car" style="color:#38bdf8">🚗 1. 車両情報の登録 ＆ ナンバー検索</div>
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label>登録番号（ナンバー）</label>
@@ -230,10 +229,8 @@
                                 <input type="text" id="car-number" placeholder="例：1111" required style="flex-grow: 1;">
                                 <button type="button" class="btn-inline-search" onclick="searchCarFromRegistrationField()">🔍 車両検索</button>
                             </div>
-                            <!-- 🆕 ステータス表示と「編集」遷移ボタンのコンテナ -->
                             <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                                 <span id="cust-register-search-status" style="font-size: 9pt; font-weight: bold; color: #fbbf24;"></span>
-                                <div id="cust-register-edit-btn-container"></div>
                             </div>
                         </div>
                         <div class="form-group"><label>車種</label><input type="text" id="car-model" required></div>
@@ -242,44 +239,20 @@
                     </div>
                 </div>
                 <div class="form-section">
-                    <div class="section-title" style="color:#38bdf8">👤 2. 顧客情報の入力</div>
+                    <div class="section-title" id="form-section-title-cust" style="color:#38bdf8">👤 2. 顧客情報の入力</div>
                     <div class="form-grid" style="margin-top:15px;">
                         <div class="form-group"><label>お名前</label><input type="text" id="cust-name" required></div>
                         <div class="form-group"><label>フリガナ</label><input type="text" id="cust-ruby" required></div>
                         <div class="form-group"><label>電話番号</label><input type="tel" id="cust-tel" required></div>
                         <div class="form-group full-width"><label>ご住所</label><input type="text" id="cust-address" required></div>
                     </div>
-                    <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#38bdf8;">📁 新規登録する</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- ⑦ 登録情報の編集画面 -->
-        <div id="page-edit-cust" class="page">
-            <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
-            <form id="form-edit-customer" onsubmit="submitEditCustomer(event)">
-                <div class="form-section">
-                    <div class="section-title" id="edit-page-main-title" style="color:#fbbf24">👤 1. 顧客情報の編集</div>
-                    <div class="form-grid" style="margin-top:15px;">
-                        <div class="form-group"><label>お名前</label><input type="text" id="edit-cust-name" required></div>
-                        <div class="form-group"><label>フリガナ</label><input type="text" id="edit-cust-ruby" required></div>
-                        <div class="form-group"><label>電話番号</label><input type="tel" id="edit-cust-tel" required></div>
-                        <div class="form-group full-width"><label>ご住所</label><input type="text" id="edit-cust-address" required></div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <div class="section-title" style="color:#fbbf24">🚗 2. 車両情報の編集</div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="edit-car-number" required></div>
-                        <div class="form-group"><label>車種</label><input type="text" id="edit-car-model" required></div>
-                        <div class="form-group"><label>車台番号</label><input type="text" id="edit-car-vin" required></div>
-                        <div class="form-group"><label>初度登録年月</label><input type="text" id="edit-car-date" required></div>
-                    </div>
-                    <input type="hidden" id="edit-cust-store">
                     
-                    <div class="form-grid action-bar-grid">
-                        <button type="button" class="btn-delete-form" onclick="requestDeleteCustomer()">🗑️ この情報を削除</button>
-                        <button type="submit" class="btn-submit-form" style="background:#fbbf24;">📁 編集を保存する</button>
+                    <!-- 元の所属店舗、変更前の特定名義保持用の隠しインプット -->
+                    <input type="hidden" id="cust-store-hidden">
+
+                    <!-- 動的変化ボタンコンテナ -->
+                    <div id="form-action-buttons-container" style="margin-top: 25px;">
+                        <button type="submit" id="btn-submit-create" class="btn-submit-form" style="background:#38bdf8;">📁 新規登録する</button>
                     </div>
                 </div>
             </form>
@@ -435,6 +408,8 @@
         let targetCustName = "";
         let targetCarNumber = "";
         
+        // フォームの状態管理用フラグ ("create" または "edit")
+        let formMode = "create";
         let originalCarNumberForEdit = "";
         let originalCustNameForEdit = "";
 
@@ -457,10 +432,32 @@
                 try {
                     loadCalendarDataFromServer();
                 } catch(e) { 
-                    console.error("データ取得処理の開始に失敗:", e); 
+                    console.error("データ取得処理 of カレンダーに失敗:", e); 
                 }
             }, 150);
         });
+
+        // メニューの「顧客登録」から直接遷移したときの状態初期化
+        function showFormForCreate() {
+            formMode = "create";
+            originalCarNumberForEdit = "";
+            originalCustNameForEdit = "";
+
+            document.getElementById('form-customer').reset();
+            document.getElementById('cust-register-search-status').innerText = "";
+            
+            // 各タイトルと下部アクションボタンを新規モードへリセット
+            document.getElementById('form-section-title-car').innerText = "🚗 1. 車両情報の登録 ＆ ナンバー検索";
+            document.getElementById('form-section-title-car').style.color = "#38bdf8";
+            document.getElementById('form-section-title-cust').innerText = "👤 2. 顧客情報の入力";
+            document.getElementById('form-section-title-cust').style.color = "#38bdf8";
+            
+            document.getElementById('form-action-buttons-container').innerHTML = `
+                <button type="submit" id="btn-submit-create" class="btn-submit-form" style="background:#38bdf8;">📁 新規登録する</button>
+            `;
+            
+            showPage('page-cust');
+        }
 
         // 店舗のクイックボタン切り替えロジック
         function changeCurrentStore(storeName, element) {
@@ -475,8 +472,6 @@
             const buttons = document.querySelectorAll('.btn-store-pick');
             buttons.forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
-            
-            console.log(`管轄店舗環境を切り替えました: ${storeName}`);
             
             if(document.getElementById('page-search').classList.contains('active')) {
                 simulateSearchAction();
@@ -497,7 +492,6 @@
                     target.style.display = 'block';
                     target.classList.add('active');
                     window.scrollTo(0, 0);
-                    console.log("遷移成功");
                 }
             } catch(err) {
                 console.error("showPage内で予期せぬエラー:", err);
@@ -537,14 +531,12 @@
             showPage('page-instant-work');
         }
 
-        // 🆕 登録フォームのナンバーインライン車両検索ロジック (マッピング不具合修正版)
+        // 🆕 登録画面のナンバーインライン検索 ＆ モードの即時自動切り替え
         function searchCarFromRegistrationField() {
             const inputEl = document.getElementById('car-number');
             const statusEl = document.getElementById('cust-register-search-status');
-            const btnContainer = document.getElementById('cust-register-edit-btn-container');
-            if(!inputEl || !statusEl || !btnContainer) return;
+            if(!inputEl || !statusEl) return;
 
-            btnContainer.innerHTML = ""; // 編集ボタンを初期リセット
             const targetNum = toNormalizeStandard(inputEl.value.trim());
             if(!targetNum) {
                 statusEl.innerText = "⚠ ナンバーを入力してから検索してください。";
@@ -559,30 +551,54 @@
             .then(res => res.json())
             .then(custData => {
                 if(!Array.isArray(custData)) custData = [];
-                
                 const match = custData.find(item => item && toNormalizeStandard(item.carNumber).indexOf(targetNum) !== -1);
                 
                 if(match) {
-                    // HTML上の各入力フィールドに値をセット
+                    // 編集（上書き）モードへと状態を移行
+                    formMode = "edit";
+                    originalCustNameForEdit = match.name;
+                    originalCarNumberForEdit = match.carNumber;
+
+                    // フィールドへの値のマッピング
                     document.getElementById('car-model').value = match.carModel || "";
                     document.getElementById('car-vin').value = match.carVin || "";
                     document.getElementById('car-date').value = match.carDate || "";
                     document.getElementById('cust-name').value = match.name || "";
-                    
-                    // プロパティ名（ruby, tel, address）とIDを正確に紐付け修正
                     document.getElementById('cust-ruby').value = match.ruby || "";
                     document.getElementById('cust-tel').value = match.tel || "";
                     document.getElementById('cust-address').value = match.address || "";
+                    document.getElementById('cust-store-hidden').value = match.store || "板橋ss";
                     
-                    statusEl.innerText = `✅ 登録情報を反映しました（管理店舗: ${match.store}）`;
-                    statusEl.style.color = "#34d399";
+                    statusEl.innerText = `✅ 既存データを発見しました。この画面でそのまま「編集」または「削除」が可能です（店舗: ${match.store}）`;
+                    statusEl.style.color = "#fbbf24";
 
-                    // 🆕 検索結果にその場で直行できる「編集画面へ遷移するボタン」を新設生成
-                    const itemJsonStr = encodeURIComponent(JSON.stringify(match));
-                    btnContainer.innerHTML = `<button type="button" class="btn-inline-search" style="padding: 6px 12px; font-size: 8.5pt;" onclick="openEditCustomerPage('${itemJsonStr}')">✏ この顧客情報を編集・削除する</button>`;
+                    // タイトルカラーを変更
+                    document.getElementById('form-section-title-car').innerText = "🚗 1. 車両情報の編集";
+                    document.getElementById('form-section-title-car').style.color = "#fbbf24";
+                    document.getElementById('form-section-title-cust').innerText = "👤 2. 顧客情報の編集";
+                    document.getElementById('form-section-title-cust').style.color = "#fbbf24";
+
+                    // 下部のアクションボタンを「削除」＆「編集保存」の構成にその場で切り替え
+                    document.getElementById('form-action-buttons-container').innerHTML = `
+                        <div class="form-grid style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <button type="button" class="btn-delete-form" onclick="requestDeleteCustomerInline()">🗑️ この情報を削除</button>
+                            <button type="submit" class="btn-submit-form" style="background:#fbbf24;">📁 編集を保存する</button>
+                        </div>
+                    `;
                 } else {
+                    // 新規登録モードとしてリセット
+                    formMode = "create";
                     statusEl.innerText = "🔍 該当する車両ナンバーは登録されていません（新規登録可能です）";
                     statusEl.style.color = "#60a5fa";
+                    
+                    document.getElementById('form-section-title-car').innerText = "🚗 1. 車両情報の登録 ＆ ナンバー検索";
+                    document.getElementById('form-section-title-car').style.color = "#38bdf8";
+                    document.getElementById('form-section-title-cust').innerText = "👤 2. 顧客情報の入力";
+                    document.getElementById('form-section-title-cust').style.color = "#38bdf8";
+
+                    document.getElementById('form-action-buttons-container').innerHTML = `
+                        <button type="submit" id="btn-submit-create" class="btn-submit-form" style="background:#38bdf8;">📁 新規登録する</button>
+                    `;
                 }
             })
             .catch(err => {
@@ -592,33 +608,49 @@
             });
         }
 
-        // 顧客情報の編集画面へと値を注入して遷移する関数
+        // 🔍 車両検索一覧から「編集」が押された際も、このハイブリッド登録画面に値を流し込んで展開
         function openEditCustomerPage(itemJsonEscaped) {
             try {
                 const item = JSON.parse(decodeURIComponent(itemJsonEscaped));
-                
+                formMode = "edit";
                 originalCustNameForEdit = item.name;
                 originalCarNumberForEdit = item.carNumber;
 
-                document.getElementById('edit-cust-name').value = item.name || "";
-                document.getElementById('edit-cust-ruby').value = item.ruby || "";
-                document.getElementById('edit-cust-tel').value = item.tel || "";
-                document.getElementById('edit-cust-address').value = item.address || "";
-                document.getElementById('edit-car-number').value = item.carNumber || "";
-                document.getElementById('edit-car-model').value = item.carModel || "";
-                document.getElementById('edit-car-vin').value = item.carVin || "";
-                document.getElementById('edit-car-date').value = item.carDate || "";
-                document.getElementById('edit-cust-store').value = item.store || "板橋ss";
+                // 各値を流し込み
+                document.getElementById('car-number').value = item.carNumber || "";
+                document.getElementById('car-model').value = item.carModel || "";
+                document.getElementById('car-vin').value = item.carVin || "";
+                document.getElementById('car-date').value = item.carDate || "";
+                document.getElementById('cust-name').value = item.name || "";
+                document.getElementById('cust-ruby').value = item.ruby || "";
+                document.getElementById('cust-tel').value = item.tel || "";
+                document.getElementById('cust-address').value = item.address || "";
+                document.getElementById('cust-store-hidden').value = item.store || "板橋ss";
 
-                showPage('page-edit-cust');
+                document.getElementById('cust-register-search-status').innerText = `✏ 既存データの編集環境を展開中 (${item.store})`;
+                document.getElementById('cust-register-search-status').style.color = "#fbbf24";
+
+                document.getElementById('form-section-title-car').innerText = "🚗 1. 車両情報の編集";
+                document.getElementById('form-section-title-car').style.color = "#fbbf24";
+                document.getElementById('form-section-title-cust').innerText = "👤 2. 顧客情報の編集";
+                document.getElementById('form-section-title-cust').style.color = "#fbbf24";
+
+                document.getElementById('form-action-buttons-container').innerHTML = `
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <button type="button" class="btn-delete-form" onclick="requestDeleteCustomerInline()">🗑️ この情報を削除</button>
+                        <button type="submit" class="btn-submit-form" style="background:#fbbf24;">📁 編集を保存する</button>
+                    </div>
+                `;
+                showPage('page-cust');
             } catch(err) {
-                console.error("編集データの読み込みに失敗しました:", err);
+                console.error(err);
                 alert("データ展開エラーが発生しました");
             }
         }
 
-        // データ削除要求の確認ダイアログおよび送信処理
-        function requestDeleteCustomer() {
+        // 画面内での直接削除リクエスト
+        function requestDeleteCustomerInline() {
+            if (!originalCustNameForEdit || !originalCarNumberForEdit) return;
             const isConfirmed = confirm(`【確認】\n顧客名: ${originalCustNameForEdit} 様\n車両ナンバー: ${originalCarNumberForEdit}\n\nこの顧客および車両登録情報をシステムから完全に削除してもよろしいですか？\n(この操作は取り消せません)`);
             
             if (isConfirmed) {
@@ -630,7 +662,44 @@
             }
         }
 
-        // 検索画面から選択された顧客情報を引き継いで予約画面を自動構築する処理
+        // フォーム送信時のハンドラー（状態フラグによってリクエストを自動分岐）
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            if (formMode === "edit") {
+                // 編集（上書き）としてデータ送信
+                sendToSpreadsheet({
+                    action: "updateCustomer",
+                    originalName: originalCustNameForEdit,       
+                    originalCarNumber: originalCarNumberForEdit, 
+                    name: document.getElementById('cust-name').value,
+                    ruby: document.getElementById('cust-ruby').value,
+                    tel: document.getElementById('cust-tel').value,
+                    address: document.getElementById('cust-address').value,
+                    store: document.getElementById('cust-store-hidden').value || "板橋ss", 
+                    carNumber: document.getElementById('car-number').value,
+                    carModel: document.getElementById('car-model').value,
+                    carVin: document.getElementById('car-vin').value,
+                    carDate: document.getElementById('car-date').value
+                }, "顧客・車両の登録情報を上書き編集しました！");
+            } else {
+                // 通常の新規登録としてデータ送信
+                let resolvedStore = (currentStore === "全店") ? "板橋ss" : currentStore;
+                sendToSpreadsheet({
+                    action: "registerCustomer",
+                    name: document.getElementById('cust-name').value,
+                    ruby: document.getElementById('cust-ruby').value,
+                    tel: document.getElementById('cust-tel').value,
+                    address: document.getElementById('cust-address').value,
+                    store: resolvedStore,
+                    carNumber: document.getElementById('car-number').value,
+                    carModel: document.getElementById('car-model').value,
+                    carVin: document.getElementById('car-vin').value,
+                    carDate: document.getElementById('car-date').value
+                }, "新規顧客データを保存しました！");
+            }
+        }
+
+        // 各種予約画面の構築ロジック
         function openBookingPage(pageId, name, carNum, carModel) {
             targetCustName = name;
             targetCarNumber = carNum;
@@ -839,44 +908,6 @@
                     syncStatus.style.color = "#fbbf24";
                 }
             });
-        }
-
-        // フォーム送信イベント群
-        function submitCustomer(e) {
-            e.preventDefault();
-            let resolvedStore = (currentStore === "全店") ? "板橋ss" : currentStore;
-
-            sendToSpreadsheet({
-                action: "registerCustomer",
-                name: document.getElementById('cust-name').value,
-                ruby: document.getElementById('cust-ruby').value,
-                tel: document.getElementById('cust-tel').value,
-                address: document.getElementById('cust-address').value,
-                store: resolvedStore,
-                carNumber: document.getElementById('car-number').value,
-                carModel: document.getElementById('car-model').value,
-                carVin: document.getElementById('car-vin').value,
-                carDate: document.getElementById('car-date').value
-            }, "新規顧客データを保存しました！");
-        }
-
-        // 登録情報の編集・上書きイベント処理
-        function submitEditCustomer(e) {
-            e.preventDefault();
-            sendToSpreadsheet({
-                action: "updateCustomer", 
-                originalName: originalCustNameForEdit,       
-                originalCarNumber: originalCarNumberForEdit, 
-                name: document.getElementById('edit-cust-name').value,
-                ruby: document.getElementById('edit-cust-ruby').value,
-                tel: document.getElementById('edit-cust-tel').value,
-                address: document.getElementById('edit-cust-address').value,
-                store: document.getElementById('edit-cust-store').value, 
-                carNumber: document.getElementById('edit-car-number').value,
-                carModel: document.getElementById('edit-car-model').value,
-                carVin: document.getElementById('edit-car-vin').value,
-                carDate: document.getElementById('edit-car-date').value
-            }, "顧客・車両の登録情報を上書き編集しました！");
         }
 
         function submitWork(e) {
