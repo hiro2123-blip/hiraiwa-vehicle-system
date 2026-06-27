@@ -3,40 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HIRAIWA 車両・店舗業務管理システム (Ver.4 確実動作版)</title>
+    <title>HIRAIWA 車両・店舗業務管理システム (Ver.6 店舗ロック解除版)</title>
     <style>
         /* 基礎リセット */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; min-height: 100vh; }
         .container { width: 100%; max-width: 1100px; margin: 0 auto; }
         
-        /* ページ切り替え用 */
+        /* ページ切り替え */
         .page { display: none; }
-        .page.active { display: block; }
+        .page.active { display: block !important; }
 
         /* ヘッダーエリア */
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 20px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .system-title { font-size: 16pt; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
-        .version-badge { color: #fbbf24; font-size: 10pt; font-weight: bold; border: 1px solid #fbbf24; padding: 2px 6px; border-radius: 4px; }
+        .version-badge { color: #f59e0b; font-size: 10pt; font-weight: bold; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; }
         .store-badge { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 10px; border-radius: 6px; font-size: 9pt; font-weight: bold; }
         .user-info { font-size: 9.5pt; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
         
         .btn-toggle-role { background: #334155; color: #cbd5e1; border: none; padding: 4px 8px; font-size: 8pt; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-toggle-role.admin-active { background: #ef4444; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
-
-        body.admin-mode header { border-color: #ef4444; }
-        body.admin-mode .system-title { color: #ef4444; }
-        body.admin-mode .store-badge { color: #ef4444; border-color: #ef4444; }
 
         /* メインレイアウト */
         .main-layout { display: grid; grid-template-columns: 290px 1fr; gap: 25px; }
         .section-title { font-size: 10pt; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; font-weight: 600; border-left: 4px solid #38bdf8; padding-left: 8px; }
-        body.admin-mode .section-title { border-left-color: #ef4444; }
 
         /* メニューボタン */
         .sidebar { display: flex; flex-direction: column; gap: 12px; }
-        .action-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; cursor: pointer; }
+        .action-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; cursor: pointer; width: 100%; display: block; text-align: left; }
         .action-card:hover { border-color: #38bdf8; }
         .action-header { font-size: 11pt; font-weight: bold; margin-bottom: 4px; pointer-events: none; }
         .btn-cust .action-header { color: #38bdf8; }
@@ -47,7 +41,7 @@
 
         /* カレンダーエリア */
         .calendar-section { width: 100%; }
-        .calendar-container { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; width: 100%; }
+        .calendar-container { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; width: 100%; display: block; }
         .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .calendar-table th { padding: 8px 0; font-size: 8.5pt; color: #94a3b8; text-align: center; border-bottom: 2px solid #334155; }
         .calendar-table td { height: 85px; border: 1px solid #334155; padding: 6px; vertical-align: top; background: #1e293b; }
@@ -56,29 +50,38 @@
         .sat .day-num { color: #60a5fa; }
         .other-month { opacity: 0.25; background: #161e2e; }
 
-        .badge-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: 55px; }
+        .badge-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: 55px; min-height: 20px; }
         .sched-badge { font-size: 7.5pt; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; }
         .badge-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); } 
         .badge-shaken { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } 
 
-        /* フォーム要素 (シンプル・安全なスタイルに統一) */
+        /* フォーム要素デザイン修正（z-indexと表示方法の適正化） */
         .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full-width { grid-column: span 2; }
         label { font-size: 9pt; color: #94a3b8; font-weight: 600; }
         
+        /* 🚨 選択不能バグの原因だったスタイルを完全に解体・修正 */
         input, select, textarea { 
-            width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: #f8fafc; font-size: 10pt; 
+            width: 100%; background: #0f172a; border: 1px solid #334155; 
+            border-radius: 6px; padding: 10px; color: #f8fafc; font-size: 10pt; 
+            display: inline-block; vertical-align: middle;
         }
-        select { cursor: pointer; }
+        /* セレクトボックスのOS標準動作を100%取り戻す設定 */
+        select {
+            appearance: select !important;
+            -webkit-appearance: select !important;
+            -moz-appearance: select !important;
+            cursor: pointer;
+        }
         textarea { height: 80px; resize: none; }
         
-        .km-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .km-input-wrapper { display: flex; align-items: center; gap: 8px; width: 100%; }
         .km-input-wrapper input { flex-grow: 1; }
         .km-unit { color: #64748b; font-size: 9.5pt; font-weight: bold; }
 
-        /* ボタン類 */
+        /* ボタン */
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
         .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
         
@@ -91,8 +94,6 @@
         .btn-view-history { background: #38bdf8; color: #0f172a; border: none; padding: 7px 14px; font-size: 8.5pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
         
         .summary-bar { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; font-size: 9.5pt; }
-        
-        /* 履歴展開エリア */
         .history-wrapper { display: none; margin-top: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 8.5pt; color: #cbd5e1; width: 100%; }
         .history-title-banner { font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px; font-size: 9pt; }
         .history-item { border-bottom: 1px dashed #1e293b; padding: 8px 0; }
@@ -106,7 +107,7 @@
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
-                <span class="version-badge" id="version-check">✨Ver.4</span>
+                <span class="version-badge" id="version-check">✨Ver.6</span>
                 <span class="store-badge" id="store-badge">板橋ss</span>
             </div>
             <div class="header-right">
@@ -121,22 +122,22 @@
             <div class="main-layout">
                 <div class="sidebar">
                     <div class="section-title">メニュー</div>
-                    <div class="action-card btn-cust" onclick="showPage('page-cust')">
+                    <button class="action-card btn-cust" type="button" onclick="showPage('page-cust')">
                         <div class="action-header">🆕 顧客登録</div>
                         <div class="action-desc">新規顧客と車両をセット登録。</div>
-                    </div>
-                    <div class="action-card btn-search" onclick="showPage('page-search')">
+                    </button>
+                    <button class="action-card btn-search" type="button" onclick="showPage('page-search')">
                         <div class="action-header">🔍 車両検索 / 作業記録</div>
                         <div class="action-desc">車両ナンバー検索・実績入力。</div>
-                    </div>
-                    <div class="action-card btn-shaken" onclick="showPage('page-shaken-reg')">
+                    </button>
+                    <button class="action-card btn-shaken" type="button" onclick="showPage('page-shaken-reg')">
                         <div class="action-header">📋 車検予約</div>
                         <div class="action-desc">未来の車検スケジュールを確保。</div>
-                    </div>
-                    <div class="action-card btn-info" onclick="showPage('page-plan-reg')">
+                    </button>
+                    <button class="action-card btn-info" type="button" onclick="showPage('page-plan-reg')">
                         <div class="action-header">📅 一般予約</div>
                         <div class="action-desc">オイル交換や点検の予約登録。</div>
-                    </div>
+                    </button>
                 </div>
 
                 <div class="calendar-section">
@@ -167,7 +168,7 @@
         </div>
 
         <div id="page-cust" class="page">
-            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="submitCustomer(event)">
                 <div class="form-section">
                     <div class="section-title" style="color:#38bdf8">👤 1. 顧客情報の入力</div>
@@ -205,13 +206,13 @@
         </div>
 
         <div id="page-search" class="page">
-            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
                 <div class="section-title" id="search-title-text" style="color:#fbbf24">🔍 来店車両の検索・作業記録</div>
                 <div class="form-grid" style="margin-top:15px;">
                     <div class="form-group full-width"><label>車両ナンバー</label><input type="text" id="search-car-number" placeholder="例：1111"></div>
                 </div>
-                <button class="btn-submit-form" style="margin-top:15px; background:#fbbf24;" onclick="simulateSearchAction()">検索する</button>
+                <button class="btn-submit-form" type="button" style="margin-top:15px; background:#fbbf24;" onclick="simulateSearchAction()">検索する</button>
             </div>
             <div class="section-title">顧客フォルダー検索結果</div>
             <table class="result-table">
@@ -223,7 +224,7 @@
         </div>
 
         <div id="page-instant-work" class="page">
-            <button class="btn-back-nav" onclick="showPage('page-search')">← 検索結果に戻る</button>
+            <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
                 <div class="form-section">
                     <div class="section-title" style="color:#34d399">🛠️ 実施した作業内容の登録</div>
@@ -264,7 +265,7 @@
         </div>
 
         <div id="page-shaken-reg" class="page">
-            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
                 <div class="form-section">
                     <div class="section-title" style="color:#ef4444">📋 車検予約スケジュールの登録</div>
@@ -303,7 +304,7 @@
         </div>
 
         <div id="page-plan-reg" class="page">
-            <button class="btn-back-nav" onclick="showPage('page-top')">← トップに戻る</button>
+            <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
                 <div class="form-section">
                     <div class="section-title" style="color:#60a5fa">📅 一般予約スケジュールの登録</div>
@@ -346,49 +347,56 @@
         let targetCustName = "";
         let targetCarNumber = "";
 
-        // 起動時にカレンダー生成とデータ取得を実行（絶対に処理を止めない）
+        // 🛡️ クラッシュ防止：起動イベント
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 generateCalendarGrid();
             } catch(e) { console.error(e); }
             
-            try {
-                loadCalendarDataFromServer();
-            } catch(e) { console.error(e); }
+            setTimeout(function() {
+                try {
+                    loadCalendarDataFromServer();
+                } catch(e) { console.error(e); }
+            }, 150);
         });
 
-        // ページ切り替え関数
         function showPage(pageId) {
-            const pages = document.querySelectorAll('.page');
-            for (let i = 0; i < pages.length; i++) {
-                pages[i].classList.remove('active');
-            }
-            const target = document.getElementById(pageId);
-            if (target) {
-                target.classList.add('active');
-                window.scrollTo(0, 0);
-            }
+            try {
+                const pages = document.querySelectorAll('.page');
+                for (let i = 0; i < pages.length; i++) {
+                    pages[i].style.display = 'none';
+                    pages[i].classList.remove('active');
+                }
+                const target = document.getElementById(pageId);
+                if (target) {
+                    target.style.display = 'block';
+                    target.classList.add('active');
+                    window.scrollTo(0, 0);
+                }
+            } catch(err) { console.error(err); }
         }
 
         function toggleAdminMode() {
-            const body = document.body;
-            const btn = document.getElementById('role-toggle');
-            const badge = document.getElementById('store-badge');
-            
-            if (body.classList.contains('admin-mode')) {
-                body.classList.remove('admin-mode');
-                if(btn) btn.innerText = "一般スタッフ(板橋ss) 🔄";
-                if(badge) badge.innerText = "板橋ss";
-                currentStore = "板橋ss";
-                isAdminMode = false;
-            } else {
-                body.classList.add('admin-mode');
-                if(btn) btn.innerText = "最高管理者 👑";
-                if(badge) badge.innerText = "全店統合統括";
-                currentStore = "全店";
-                isAdminMode = true;
-            }
-            simulateSearchAction(); 
+            try {
+                const body = document.body;
+                const btn = document.getElementById('role-toggle');
+                const badge = document.getElementById('store-badge');
+                
+                if (body.classList.contains('admin-mode')) {
+                    body.classList.remove('admin-mode');
+                    if(btn) btn.innerText = "一般スタッフ(板橋ss) 🔄";
+                    if(badge) badge.innerText = "板橋ss";
+                    currentStore = "板橋ss";
+                    isAdminMode = false;
+                } else {
+                    body.classList.add('admin-mode');
+                    if(btn) btn.innerText = "最高管理者 👑";
+                    if(badge) badge.innerText = "全店統合統括";
+                    currentStore = "全店";
+                    isAdminMode = true;
+                }
+                simulateSearchAction(); 
+            } catch(e) { console.error(e); }
         }
 
         function openInstantWork(name, carNum) {
@@ -401,13 +409,7 @@
 
         function toggleHistoryBox(id) {
             const el = document.getElementById(id);
-            if(el) {
-                if(el.style.display === "block") {
-                    el.style.display = "none";
-                } else {
-                    el.style.display = "block";
-                }
-            }
+            if(el) el.style.display = el.style.display === "block" ? "none" : "block";
         }
 
         function toNormalizeStandard(str) {
@@ -495,8 +497,8 @@
                         hTd.colSpan = 3; hTd.style.padding = "0"; hTd.innerHTML = historyHtml;
                         hTr.appendChild(hTd); tbody.appendChild(hTr);
                     });
-                }).catch(function() { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 履歴エラー</td></tr>`; });
-            }).catch(function() { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 顧客エラー</td></tr>`; });
+                }).catch(function() { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 履歴同期に失敗しました</td></tr>`; });
+            }).catch(function() { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#f87171;">❌ 顧客データ同期に失敗しました</td></tr>`; });
         }
 
         function generateCalendarGrid() {
@@ -540,24 +542,34 @@
             fetch(GAS_URL + "?op=getCalendarData")
             .then(function(res) { return res.json(); })
             .then(function(data) {
-                if(data.shaken) {
+                if(data && data.shaken) {
                     data.shaken.forEach(function(row) {
-                        let d = new Date(row[3]);
-                        if(!isNaN(d.getTime())) {
-                            let cellId = "day-" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                            let cell = document.getElementById(cellId);
-                            if(cell) cell.innerHTML += '<span class="sched-badge badge-shaken">📋 車検:' + row[1] + '</span>';
-                        }
+                        try {
+                            if(!row[3]) return;
+                            let d = new Date(row[3]);
+                            if(!isNaN(d.getTime())) {
+                                let mStr = String(d.getMonth() + 1).padStart(2, '0');
+                                let dStr = String(d.getDate()).padStart(2, '0');
+                                let cellId = "day-" + d.getFullYear() + "-" + mStr + "-" + dStr;
+                                let cell = document.getElementById(cellId);
+                                if(cell) cell.innerHTML += '<span class="sched-badge badge-shaken">📋 車検:' + row[1] + '</span>';
+                            }
+                        } catch(err) { console.error(err); }
                     });
                 }
-                if(data.work) {
+                if(data && data.work) {
                     data.work.forEach(function(row) {
-                        let d = new Date(row[3]);
-                        if(!isNaN(d.getTime())) {
-                            let cellId = "day-" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                            let cell = document.getElementById(cellId);
-                            if(cell) cell.innerHTML += '<span class="sched-badge badge-done">✅ [済] ' + row[4].substring(0,4) + '</span>';
-                        }
+                        try {
+                            if(!row[3]) return;
+                            let d = new Date(row[3]);
+                            if(!isNaN(d.getTime())) {
+                                let mStr = String(d.getMonth() + 1).padStart(2, '0');
+                                let dStr = String(d.getDate()).padStart(2, '0');
+                                let cellId = "day-" + d.getFullYear() + "-" + mStr + "-" dStr;
+                                let cell = document.getElementById(cellId);
+                                if(cell) cell.innerHTML += '<span class="sched-badge badge-done">✅ [済] ' + String(row[4] || "").substring(0,4) + '</span>';
+                            }
+                        } catch(err) { console.error(err); }
                     });
                 }
             })
