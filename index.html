@@ -80,7 +80,7 @@
         .sched-badge:hover { opacity: 0.8; }
         .badge-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); } 
         .badge-shaken { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } 
-        .badge-plan { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(60, 165, 250, 0.3); } /* 🆕 一般予約用バッジカラー */
+        .badge-plan { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(60, 165, 250, 0.3); }
 
         /* フォーム要素 */
         .form-section { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
@@ -139,14 +139,12 @@
 <body>
 
     <div class="container">
-        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
                 <span class="version-badge" id="version-check">✨Ver.5</span>
                 <span class="store-badge" id="store-badge">板橋ss</span>
                 
-                <!-- 店舗切り替えクイックボタンエリア -->
                 <div class="store-select-buttons" id="store-quick-selectors" style="display: flex; gap: 4px; margin-left: 8px;">
                     <button type="button" class="btn-store-pick active" onclick="changeCurrentStore('板橋ss', this)">板橋</button>
                     <button type="button" class="btn-store-pick" onclick="changeCurrentStore('セルフ志村ss', this)">志村</button>
@@ -166,7 +164,6 @@
             </div>
         </header>
 
-        <!-- ① トップ画面 -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -189,7 +186,6 @@
                     </button>
                 </div>
 
-                <!-- カレンダー -->
                 <div class="calendar-section">
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
@@ -206,8 +202,7 @@
                                 </tr>
                             </thead>
                             <tbody id="calendar-body">
-                                <!-- JSで安全に組み立てられます -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -218,7 +213,6 @@
             </div>
         </div>
 
-        <!-- ② 顧客登録 兼 編集画面（ハイブリッド一体型フォーム） -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="handleFormSubmit(event)">
@@ -258,7 +252,6 @@
             </form>
         </div>
 
-        <!-- ③ 車両検索 画面 -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
@@ -277,7 +270,6 @@
             </table>
         </div>
 
-        <!-- ④ 突発の実績登録画面 -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -319,7 +311,6 @@
             </form>
         </div>
 
-        <!-- ⑤ 車検予約 登録画面 -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -329,8 +320,7 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="shaken-cust" required>
-                                <!-- 動的に割り当てられます -->
-                            </select>
+                                </select>
                         </div>
                         <div class="form-group"><label>車検入庫予定日</label><input type="date" id="shaken-date" required></div>
                         <div class="form-group">
@@ -361,7 +351,6 @@
             </form>
         </div>
 
-        <!-- ⑥ 一般予約 登録画面 -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -371,8 +360,7 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="plan-cust" required>
-                                <!-- 動的に割り当てられます -->
-                            </select>
+                                </select>
                         </div>
                         <div class="form-group">
                             <label>作業予約区分</label>
@@ -436,7 +424,6 @@
             }, 150);
         });
 
-        // メニューの「顧客登録」から直接遷移したときの状態初期化
         function showFormForCreate() {
             formMode = "create";
             originalCarNumberForEdit = "";
@@ -529,7 +516,7 @@
             showPage('page-instant-work');
         }
 
-        // 登録画面のナンバーインライン検索 ＆ モードの即時自動切り替え
+        // 登録画面のナンバーインライン検索
         function searchCarFromRegistrationField() {
             const inputEl = document.getElementById('car-number');
             const statusEl = document.getElementById('cust-register-search-status');
@@ -664,7 +651,7 @@
             }
         }
 
-        // フォーム送信時のハンドラー（状態フラグによってリクエストを自動分岐）
+        // フォーム送信時のハンドラー
         function handleFormSubmit(e) {
             e.preventDefault();
             if (formMode === "edit") {
@@ -859,7 +846,7 @@
             console.log("カレンダーマスの生成完了");
         }
 
-        // 💡 サーバーから全予定データを取得 ＆ マッピング（一般予約描画追加版）
+        // 💡 サーバーから全予定データを取得 ＆ マッピング（インデックス修正完了版）
         function loadCalendarDataFromServer() {
             const syncStatus = document.getElementById('sync-status');
             fetch(GAS_URL + "?op=getCalendarData")
@@ -891,10 +878,11 @@
                     });
                 }
                 
-                // ② 作業実績（済）バッジの描画
+                // 🛠 ② 作業実績（済）バッジの描画 (「作業実績」シートの並びに完全同期)
                 if(data.work && Array.isArray(data.work)) {
                     data.work.forEach(function(row) {
                         try {
+                            // row[3]が作業日（シートのD列）
                             if(!row || !row[3]) return;
                             let d = new Date(row[3]);
                             if(!isNaN(d.getTime())) {
@@ -905,21 +893,23 @@
                                 
                                 if(cell) {
                                     let formattedDate = `${d.getFullYear()}/${mStr}/${dStr}`;
+                                    // row[1]:顧客名, row[2]:ナンバー, row[4]:分類, row[5]:走行距離, row[6]:対応場所, row[7]:内容
                                     let detailsText = `【入庫種別】 作業完了実績\n【顧客名】 ${row[1]} 様\n【車両No】 ${row[2] || '不明'}\n【作業日】 ${formattedDate}\n【作業分類】 ${row[4] || '一般整備'}\n【走行距離】 ${row[5] || '0'} km\n【対応店舗】 ${row[6] || '不明'}\n【作業内容】 ${row[7] || '記述なし'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
 
-                                    cell.innerHTML += `<span class="sched-badge badge-done" onclick="showScheduleDetails('${detailsEscaped}')">✅ [済] ${String(row[4] || "").substring(0,4)}</span>`;
+                                    // 分類テキスト全体（アイコン含む）をバッジ名に正しく適用
+                                    let labelText = String(row[4] || "作業実績");
+                                    cell.innerHTML += `<span class="sched-badge badge-done" onclick="showScheduleDetails('${detailsEscaped}')">✅ [済] ${labelText}</span>`;
                                 }
                             }
                         } catch(err) { console.error("実績行の読み込みスキップ:", err); }
                     });
                 }
 
-                // 🆕 ③ 一般予約バッジ（オイル交換・点検など）の描画ロジックを追加
+                // ③ 一般予約バッジの描画
                 if(data.plan && Array.isArray(data.plan)) {
                     data.plan.forEach(function(row) {
                         try {
-                            // row[4]に入庫予定日、row[1]に顧客情報、row[2]に作業区分、row[3]に店舗情報が入っている想定
                             if(!row || !row[4]) return; 
                             let d = new Date(row[4]);
                             if(!isNaN(d.getTime())) {
@@ -933,7 +923,6 @@
                                     let detailsText = `【入庫種別】 一般予約\n【顧客名】 ${row[1]} 様\n【作業区分】 ${row[2] || 'オイル交換・点検'}\n【入庫予定日】 ${formattedDate}\n【予約店舗】 ${row[3] || '未定'}`;
                                     let detailsEscaped = encodeURIComponent(detailsText);
 
-                                    // カレンダーに青い一般予約バッジを生成
                                     cell.innerHTML += `<span class="sched-badge badge-plan" onclick="showScheduleDetails('${detailsEscaped}')">📅 予約:${String(row[1]).substring(0,5)}</span>`;
                                 }
                             }
