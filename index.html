@@ -45,7 +45,6 @@
             color: #0f172a;
             border-color: #38bdf8;
         }
-        /* 管理者モードの時はクイック選択を非表示にする */
         .admin-mode #store-quick-selectors {
             display: none !important;
         }
@@ -100,6 +99,12 @@
         .km-input-wrapper input { flex-grow: 1; }
         .km-unit { color: #64748b; font-size: 9.5pt; font-weight: bold; }
 
+        /* ナンバー検索ボタン（新設インライン用） */
+        .btn-inline-search {
+            background: #fbbf24; color: #0f172a; border: none; padding: 10px 15px; font-size: 9.5pt; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+        }
+        .btn-inline-search:hover { background: #f59e0b; }
+
         /* ボタン */
         .btn-back-nav { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }
         .btn-submit-form { color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 10.5pt; }
@@ -126,12 +131,14 @@
 <body>
 
     <div class="container">
+        <!-- ヘッダー -->
         <header>
             <div class="header-left">
                 <span class="system-title">HIRAIWA VEHICLE MANAGEMENT</span>
                 <span class="version-badge" id="version-check">✨Ver.5</span>
                 <span class="store-badge" id="store-badge">板橋ss</span>
                 
+                <!-- 店舗切り替えクイックボタンエリア -->
                 <div class="store-select-buttons" id="store-quick-selectors" style="display: flex; gap: 4px; margin-left: 8px;">
                     <button type="button" class="btn-store-pick active" onclick="changeCurrentStore('板橋ss', this)">板橋</button>
                     <button type="button" class="btn-store-pick" onclick="changeCurrentStore('セルフ志村ss', this)">志村</button>
@@ -151,6 +158,7 @@
             </div>
         </header>
 
+        <!-- ① トップ画面 -->
         <div id="page-top" class="page active">
             <div class="main-layout">
                 <div class="sidebar">
@@ -173,6 +181,7 @@
                     </button>
                 </div>
 
+                <!-- カレンダー -->
                 <div class="calendar-section">
                     <div class="section-title" id="calendar-title">スケジュール・作業実績 (2026年6月)</div>
                     <div class="calendar-container">
@@ -189,7 +198,8 @@
                                 </tr>
                             </thead>
                             <tbody id="calendar-body">
-                                </tbody>
+                                <!-- JSで安全に組み立てられます -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -200,36 +210,46 @@
             </div>
         </div>
 
+        <!-- ② 顧客登録画面 -->
         <div id="page-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-customer" onsubmit="submitCustomer(event)">
                 <div class="form-section">
-                    <div class="section-title" style="color:#38bdf8">👤 1. 顧客情報の入力</div>
+                    <div class="section-title" style="color:#38bdf8">🚗 1. 車両情報の登録 ＆ ナンバー検索</div>
+                    <div class="form-grid">
+                        <!-- 🆕 ナンバー入力にインライン検索機能を融合 -->
+                        <div class="form-group full-width">
+                            <label>登録番号（ナンバー）</label>
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                <input type="text" id="car-number" placeholder="例：1111" required style="flex-grow: 1;">
+                                <button type="button" class="btn-inline-search" onclick="searchCarFromRegistrationField()">🔍 車両検索</button>
+                            </div>
+                            <span id="cust-register-search-status" style="font-size: 8.5pt; font-weight: bold; color: #fbbf24; margin-top: 2px; display: block;"></span>
+                        </div>
+                        <div class="form-group"><label>車種</label><input type="text" id="car-model" required></div>
+                        <div class="form-group"><label>車台番号</label><input type="text" id="car-vin" required></div>
+                        <div class="form-group"><label>初度登録年月</label><input type="text" id="car-date" required></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title" style="color:#38bdf8">👤 2. 顧客情報の入力</div>
                     <div class="form-grid" style="margin-top:15px;">
                         <div class="form-group"><label>お名前</label><input type="text" id="cust-name" required></div>
                         <div class="form-group"><label>フリガナ</label><input type="text" id="cust-ruby" required></div>
                         <div class="form-group"><label>電話番号</label><input type="tel" id="cust-tel" required></div>
                         <div class="form-group full-width"><label>ご住所</label><input type="text" id="cust-address" required></div>
                     </div>
-                </div>
-                <div class="form-section">
-                    <div class="section-title" style="color:#38bdf8">🚗 2. 車両情報の登録</div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="car-number" required></div>
-                        <div class="form-group"><label>車種</label><input type="text" id="car-model" required></div>
-                        <div class="form-group"><label>車台番号</label><input type="text" id="car-vin" required></div>
-                        <div class="form-group"><label>初度登録年月</label><input type="text" id="car-date" required></div>
-                    </div>
                     <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#38bdf8;">📁 新規登録する</button>
                 </div>
             </form>
         </div>
 
+        <!-- ⑦ 登録情報の編集画面 -->
         <div id="page-edit-cust" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-edit-customer" onsubmit="submitEditCustomer(event)">
                 <div class="form-section">
-                    <div class="section-title" style="color:#fbbf24">👤 1. 顧客情報の修正</div>
+                    <div class="section-title" style="color:#fbbf24">👤 1. 顧客情報の編集</div>
                     <div class="form-grid" style="margin-top:15px;">
                         <div class="form-group"><label>お名前</label><input type="text" id="edit-cust-name" required></div>
                         <div class="form-group"><label>フリガナ</label><input type="text" id="edit-cust-ruby" required></div>
@@ -238,7 +258,7 @@
                     </div>
                 </div>
                 <div class="form-section">
-                    <div class="section-title" style="color:#fbbf24">🚗 2. 車両情報の修正</div>
+                    <div class="section-title" style="color:#fbbf24">🚗 2. 車両情報の編集</div>
                     <div class="form-grid">
                         <div class="form-group"><label>登録番号（ナンバー）</label><input type="text" id="edit-car-number" required></div>
                         <div class="form-group"><label>車種</label><input type="text" id="edit-car-model" required></div>
@@ -246,11 +266,12 @@
                         <div class="form-group"><label>初度登録年月</label><input type="text" id="edit-car-date" required></div>
                     </div>
                     <input type="hidden" id="edit-cust-store">
-                    <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#fbbf24;">📁 修正を保存する</button>
+                    <button type="submit" class="btn-submit-form" style="margin-top:25px; background:#fbbf24;">📁 編集を保存する</button>
                 </div>
             </form>
         </div>
 
+        <!-- ③ 車両検索 画面 -->
         <div id="page-search" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <div class="form-section">
@@ -269,6 +290,7 @@
             </table>
         </div>
 
+        <!-- ④ 突発の実績登録画面 -->
         <div id="page-instant-work" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-search')">← 検索結果に戻る</button>
             <form id="form-work" onsubmit="submitWork(event)">
@@ -310,6 +332,7 @@
             </form>
         </div>
 
+        <!-- ⑤ 車検予約 登録画面 -->
         <div id="page-shaken-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-shaken" onsubmit="submitShaken(event)">
@@ -319,7 +342,8 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="shaken-cust" required>
-                                </select>
+                                <!-- 動的に割り当てられます -->
+                            </select>
                         </div>
                         <div class="form-group"><label>車検入庫予定日</label><input type="date" id="shaken-date" required></div>
                         <div class="form-group">
@@ -350,6 +374,7 @@
             </form>
         </div>
 
+        <!-- ⑥ 一般予約 登録画面 -->
         <div id="page-plan-reg" class="page">
             <button class="btn-back-nav" type="button" onclick="showPage('page-top')">← トップに戻る</button>
             <form id="form-plan" onsubmit="submitPlan(event)">
@@ -359,7 +384,8 @@
                         <div class="form-group full-width">
                             <label>顧客・車両</label>
                             <select id="plan-cust" required>
-                                </select>
+                                <!-- 動的に割り当てられます -->
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>作業予約区分</label>
@@ -402,20 +428,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log("DOM準備完了：カレンダー枠の生成および日付の初期化を実行します。");
             
-            // ① 日付インプットを今日(2026年6月27日)に同期
             const todayStr = "2026-06-27";
             if(document.getElementById('work-date')) document.getElementById('work-date').value = todayStr;
             if(document.getElementById('shaken-date')) document.getElementById('shaken-date').value = todayStr;
             if(document.getElementById('plan-date')) document.getElementById('plan-date').value = todayStr;
 
-            // ② カレンダー枠の安全生成
             try {
                 generateCalendarGrid();
             } catch(e) { 
                 console.error("カレンダー枠生成で例外検知:", e); 
             }
             
-            // ③ バックグラウンドでのデータ通信開始（失敗してもカレンダー等の動作を巻き込まない）
             setTimeout(function() {
                 try {
                     loadCalendarDataFromServer();
@@ -500,7 +523,55 @@
             showPage('page-instant-work');
         }
 
-        // 修正ボタンが押された際にフォームへ値を注入して遷移する関数
+        // 🆕 登録フォームのナンバーインライン車両検索ロジック (新設)
+        function searchCarFromRegistrationField() {
+            const inputEl = document.getElementById('car-number');
+            const statusEl = document.getElementById('cust-register-search-status');
+            if(!inputEl || !statusEl) return;
+
+            const targetNum = toNormalizeStandard(inputEl.value.trim());
+            if(!targetNum) {
+                statusEl.innerText = "⚠ ナンバーを入力してから検索してください。";
+                statusEl.style.color = "#f87171";
+                return;
+            }
+
+            statusEl.innerText = "⏳ 車両データベースを照会中...";
+            statusEl.style.color = "#fbbf24";
+
+            fetch(GAS_URL + "?op=searchCustomers")
+            .then(res => res.json())
+            .then(custData => {
+                if(!Array.isArray(custData)) custData = [];
+                
+                // ナンバーの部分一致、または完全一致する既存の車両を検出
+                const match = custData.find(item => item && toNormalizeStandard(item.carNumber).indexOf(targetNum) !== -1);
+                
+                if(match) {
+                    // 発見した車両・名義データを各フォームフィールドへ自動マッピング
+                    document.getElementById('car-model').value = match.carModel || "";
+                    document.getElementById('car-vin').value = match.carVin || "";
+                    document.getElementById('car-date').value = match.carDate || "";
+                    document.getElementById('cust-name').value = match.name || "";
+                    document.getElementById('cust-ruby').value = match.ruby || "";
+                    document.getElementById('cust-tel').value = match.tel || "";
+                    document.getElementById('cust-address').value = match.address || "";
+                    
+                    statusEl.innerText = `✅ 既存データを発見しました。内容を自動展開しました（管理店舗: ${match.store}）`;
+                    statusEl.style.color = "#34d399";
+                } else {
+                    statusEl.innerText = "🔍 該当する車両ナンバーは登録されていません（新規登録可能です）";
+                    statusEl.style.color = "#60a5fa";
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                statusEl.innerText = "❌ 車両データベースとの通信に失敗しました。";
+                statusEl.style.color = "#f87171";
+            });
+        }
+
+        // 顧客情報の編集画面へと値を注入して遷移する関数
         function openEditCustomerPage(itemJsonEscaped) {
             try {
                 const item = JSON.parse(decodeURIComponent(itemJsonEscaped));
@@ -520,7 +591,7 @@
 
                 showPage('page-edit-cust');
             } catch(err) {
-                console.error("修正データの読み込みに失敗しました:", err);
+                console.error("編集データの読み込みに失敗しました:", err);
                 alert("データ展開エラーが発生しました");
             }
         }
@@ -626,7 +697,8 @@
                         if(isAdminMode) {
                             btnHTML += '<button class="btn-edit-admin" type="button" onclick="alert(\'管理者用編集画面(未実装)\')">✏️ 管理編集</button>';
                         } else {
-                            btnHTML += '<button class="btn-edit-admin" style="background:#fbbf24; color:#0f172a;" type="button" onclick="openEditCustomerPage(\'' + itemJsonStr + '\')">✏️ 修正</button>';
+                            // 🆕 ボタン文言を「編集」へと変更
+                            btnHTML += '<button class="btn-edit-admin" style="background:#fbbf24; color:#0f172a;" type="button" onclick="openEditCustomerPage(\'' + itemJsonStr + '\')">✏️ 編集</button>';
                             btnHTML += '<button class="btn-instant-work" type="button" onclick="openInstantWork(\'' + item.name + '\', \'' + item.carNumber + '\')">⚡ 実績登録</button>';
                             btnHTML += '<button class="btn-shaken-booking" type="button" onclick="openBookingPage(\'page-shaken-reg\', \'' + item.name + '\', \'' + item.carNumber + '\', \'' + item.carModel + '\')">📋 車検予約</button>';
                             btnHTML += '<button class="btn-plan-booking" type="button" onclick="openBookingPage(\'page-plan-reg\', \'' + item.name + '\', \'' + item.carNumber + '\', \'' + item.carModel + '\')">📅 一般予約</button>';
@@ -755,7 +827,7 @@
             }, "新規顧客データを保存しました！");
         }
 
-        // 登録情報の修正・上書きイベント処理
+        // 登録情報の編集・上書きイベント処理
         function submitEditCustomer(e) {
             e.preventDefault();
             sendToSpreadsheet({
@@ -771,7 +843,7 @@
                 carModel: document.getElementById('edit-car-model').value,
                 carVin: document.getElementById('edit-car-vin').value,
                 carDate: document.getElementById('edit-car-date').value
-            }, "登録情報を上書き修正しました！");
+            }, "顧客の登録情報を上書き編集しました！");
         }
 
         function submitWork(e) {
